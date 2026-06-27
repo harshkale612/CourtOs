@@ -1,0 +1,351 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================
+   COURTOS DESIGN TOKENS  (source of truth — Phase 2)
+   Dark-mode-first. :root carries the dark theme.
+   ============================================================ */
+:root {
+  /* --- Backgrounds (layered elevation) --- */
+  --bg-canvas: #080b14;
+  --bg-surface: #0b0f19;
+  --bg-raised: #111827;
+  --bg-overlay: rgba(8, 11, 20, 0.72);
+  --bg-glass: rgba(255, 255, 255, 0.04);
+
+  /* --- Borders (hairline system) --- */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --border-glow: rgba(99, 102, 241, 0.45);
+
+  /* --- Text --- */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+  --text-on-accent: #ffffff;
+  --text-disabled: rgba(148, 163, 184, 0.45);
+
+  /* --- Brand --- */
+  --brand: #6366f1;
+  --brand-from: #3b82f6;
+  --brand-via: #6366f1;
+  --brand-to: #8b5cf6;
+
+  /* --- State --- */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #f43f5e;
+  --info: #06b6d4;
+
+  /* --- Accents --- */
+  --accent-emerald: #10b981;
+  --accent-cyan: #06b6d4;
+  --accent-orange: #f59e0b;
+  --accent-pink: #ec4899;
+  --accent-purple: #8b5cf6;
+  --accent-blue: #3b82f6;
+
+  /* --- Sport accents (default = tennis; surfaces override --sport-accent) --- */
+  --sport-tennis: #a3e635;
+  --sport-pickleball: #f59e0b;
+  --sport-padel: #06b6d4;
+  --sport-badminton: #8b5cf6;
+  --sport-squash: #ec4899;
+  --sport-accent: var(--brand);
+
+  /* --- Gradients & meshes --- */
+  --grad-brand: linear-gradient(135deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%);
+  --grad-brand-soft: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(139, 92, 246, 0.18));
+  --grad-text: linear-gradient(120deg, #ffffff 0%, #cbd5e1 55%, #8b5cf6 100%);
+  --mesh-bg:
+    radial-gradient(40% 50% at 15% 10%, rgba(59, 130, 246, 0.16), transparent 60%),
+    radial-gradient(35% 45% at 85% 15%, rgba(139, 92, 246, 0.14), transparent 60%),
+    radial-gradient(50% 60% at 50% 100%, rgba(6, 182, 212, 0.1), transparent 60%), var(--bg-canvas);
+
+  /* --- Shadows (cool-tinted) --- */
+  --sh-1: 0 1px 2px rgba(2, 6, 18, 0.4);
+  --sh-2: 0 4px 16px -4px rgba(2, 6, 18, 0.5);
+  --sh-3: 0 12px 32px -8px rgba(2, 6, 18, 0.6);
+  --sh-4: 0 24px 64px -16px rgba(2, 6, 18, 0.7);
+
+  /* --- Glows (accent-tinted) --- */
+  --glow-brand: 0 8px 32px -6px rgba(99, 102, 241, 0.55);
+  --glow-emerald: 0 8px 32px -6px rgba(16, 185, 129, 0.5);
+  --glow-pink: 0 8px 32px -6px rgba(236, 72, 153, 0.5);
+
+  /* --- Radii --- */
+  --radius: 0.75rem; /* 12px base for shadcn */
+  --r-sm: 0.5rem;
+  --r-md: 0.75rem;
+  --r-lg: 1rem;
+  --r-xl: 1.25rem;
+  --r-2xl: 1.5rem;
+  --r-3xl: 2rem;
+
+  /* --- Motion --- */
+  --d-fast: 150ms;
+  --d-base: 220ms;
+  --d-slow: 320ms;
+  --d-slower: 520ms;
+  --e-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --e-inout: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* --- Effects --- */
+  --blur-glass: 16px;
+  --blur-overlay: 8px;
+
+  /* ============================================================
+     shadcn/ui token bridge (maps shadcn vars → CourtOS tokens)
+     ============================================================ */
+  --background: var(--bg-canvas);
+  --foreground: var(--text-primary);
+  --card: var(--bg-raised);
+  --card-foreground: var(--text-primary);
+  --popover: var(--bg-surface);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--brand);
+  --primary-foreground: #ffffff;
+  --secondary: rgba(255, 255, 255, 0.06);
+  --secondary-foreground: var(--text-primary);
+  --muted: rgba(255, 255, 255, 0.04);
+  --muted-foreground: var(--text-secondary);
+  --accent: rgba(255, 255, 255, 0.06);
+  --accent-foreground: var(--text-primary);
+  --destructive: var(--danger);
+  --destructive-foreground: #ffffff;
+  --border: var(--border-default);
+  --input: var(--border-default);
+  --ring: var(--brand);
+  --chart-1: var(--accent-blue);
+  --chart-2: var(--accent-emerald);
+  --chart-3: var(--accent-purple);
+  --chart-4: var(--accent-orange);
+  --chart-5: var(--accent-pink);
+  --sidebar: var(--bg-surface);
+  --sidebar-foreground: var(--text-secondary);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(255, 255, 255, 0.06);
+  --sidebar-accent-foreground: var(--text-primary);
+  --sidebar-border: var(--border-subtle);
+  --sidebar-ring: var(--brand);
+}
+
+/* ============================================================
+   @theme — expose tokens as Tailwind utilities
+   (bg-canvas, text-sport, shadow-glow-brand, rounded-2xl, etc.)
+   ============================================================ */
+@theme inline {
+  /* fonts */
+  --font-sans: var(--font-geist-sans), Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* shadcn color bridge */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* CourtOS semantic colors */
+  --color-canvas: var(--bg-canvas);
+  --color-surface: var(--bg-surface);
+  --color-raised: var(--bg-raised);
+  --color-glass: var(--bg-glass);
+  --color-ink-secondary: var(--text-secondary);
+  --color-ink-tertiary: var(--text-tertiary);
+  --color-brand: var(--brand);
+  --color-brand-from: var(--brand-from);
+  --color-brand-via: var(--brand-via);
+  --color-brand-to: var(--brand-to);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --color-emerald: var(--accent-emerald);
+  --color-cyan: var(--accent-cyan);
+  --color-orange: var(--accent-orange);
+  --color-pink: var(--accent-pink);
+  --color-sport: var(--sport-accent);
+  --color-sport-tennis: var(--sport-tennis);
+  --color-sport-pickleball: var(--sport-pickleball);
+  --color-sport-padel: var(--sport-padel);
+  --color-sport-badminton: var(--sport-badminton);
+  --color-sport-squash: var(--sport-squash);
+
+  /* radii */
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --radius-xl: var(--r-xl);
+  --radius-2xl: var(--r-2xl);
+  --radius-3xl: var(--r-3xl);
+
+  /* shadows */
+  --shadow-sh-1: var(--sh-1);
+  --shadow-sh-2: var(--sh-2);
+  --shadow-sh-3: var(--sh-3);
+  --shadow-sh-4: var(--sh-4);
+  --shadow-glow-brand: var(--glow-brand);
+  --shadow-glow-emerald: var(--glow-emerald);
+  --shadow-glow-pink: var(--glow-pink);
+
+  /* breakpoints (adds 3xl ultrawide) */
+  --breakpoint-3xl: 112rem;
+
+  /* easings */
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* ============================================================
+   Base layer
+   ============================================================ */
+@layer base {
+  * {
+    border-color: var(--border-default);
+  }
+
+  html {
+    color-scheme: dark;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    min-height: 100vh;
+  }
+
+  /* tabular numerals for data surfaces */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::selection {
+    background: rgba(99, 102, 241, 0.35);
+    color: #fff;
+  }
+
+  /* premium scrollbars */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.16);
+    background-clip: padding-box;
+  }
+
+  /* visible, premium focus ring */
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+}
+
+/* ============================================================
+   Signature utilities
+   ============================================================ */
+@layer utilities {
+  .mesh-bg {
+    background: var(--mesh-bg);
+  }
+  .glass {
+    background: var(--bg-glass);
+    backdrop-filter: blur(var(--blur-glass)) saturate(140%);
+    -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(140%);
+    border: 1px solid var(--border-default);
+  }
+  .text-gradient {
+    background: var(--grad-text);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .bg-grad-brand {
+    background-image: var(--grad-brand);
+  }
+  .bg-grad-brand-soft {
+    background-image: var(--grad-brand-soft);
+  }
+  /* 1px gradient ring (glow-border) */
+  .glow-border {
+    position: relative;
+  }
+  .glow-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--grad-brand);
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}
+
+/* shimmer for skeleton loaders */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* honor reduced motion globally */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
