@@ -6,6 +6,7 @@ export const queryKeys = {
     all: ["courts"] as const,
     list: (sport?: Sport) => ["courts", "list", sport ?? "all"] as const,
     detail: (id: string) => ["courts", "detail", id] as const,
+    sectionStatuses: ["courts", "section-statuses"] as const,
     availability: (sport: Sport, dateISO: string) =>
       ["courts", "availability", sport, dateISO] as const,
   },
@@ -38,8 +39,14 @@ export const queryKeys = {
   },
   analytics: {
     kpis: ["analytics", "kpis"] as const,
+    facility: ["analytics", "facility"] as const,
     revenue: ["analytics", "revenue"] as const,
     heatmap: ["analytics", "heatmap"] as const,
     sports: ["analytics", "sports"] as const,
+    bookingTypes: ["analytics", "booking-types"] as const,
+    revenueByCourt: ["analytics", "revenue-by-court"] as const,
+    revenueBySection: ["analytics", "revenue-by-section"] as const,
+    sectionUtil: ["analytics", "section-util"] as const,
+    courtUtil: ["analytics", "court-util"] as const,
   },
 } as const;

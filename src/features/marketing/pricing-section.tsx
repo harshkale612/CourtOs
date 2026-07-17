@@ -16,10 +16,19 @@ export function PricingSection() {
     <div className="space-y-10">
       {/* billing toggle */}
       <div className="flex items-center justify-center gap-3">
-        <span className={cn("text-sm", !annual ? "text-foreground" : "text-ink-tertiary")}>
-          Monthly
-        </span>
         <button
+          type="button"
+          onClick={() => setAnnual(false)}
+          className={cn(
+            "text-sm transition-colors",
+            !annual ? "text-foreground" : "text-ink-tertiary hover:text-ink-secondary",
+          )}
+          aria-pressed={!annual}
+        >
+          Monthly
+        </button>
+        <button
+          type="button"
           onClick={() => setAnnual((v) => !v)}
           className={cn(
             "relative h-7 w-12 rounded-full border border-transparent transition-colors",
@@ -29,14 +38,22 @@ export function PricingSection() {
         >
           <span
             className={cn(
-              "absolute top-0.5 size-5 rounded-full bg-white transition-transform",
-              annual ? "translate-x-[22px]" : "translate-x-0.5",
+              "absolute left-1 top-1 size-5 rounded-full bg-white transition-transform",
+              annual ? "translate-x-5" : "translate-x-0",
             )}
           />
         </button>
-        <span className={cn("text-sm", annual ? "text-foreground" : "text-ink-tertiary")}>
+        <button
+          type="button"
+          onClick={() => setAnnual(true)}
+          className={cn(
+            "text-sm transition-colors",
+            annual ? "text-foreground" : "text-ink-tertiary hover:text-ink-secondary",
+          )}
+          aria-pressed={annual}
+        >
           Annual
-        </span>
+        </button>
         <span className="rounded-full bg-success/15 px-2 py-0.5 text-xs font-semibold text-success">
           Save 20%
         </span>

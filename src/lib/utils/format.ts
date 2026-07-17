@@ -1,11 +1,15 @@
 import { format, formatDistanceToNow, isToday, isTomorrow, isYesterday } from "date-fns";
 
-/** Currency — defaults to USD. */
-export function formatCurrency(amount: number, currency = "USD"): string {
+/**
+ * Currency — defaults to CAD, rendered as "CA$45.00".
+ * (en-US + CAD yields the "CA$" prefix; en-CA would render a bare "$".)
+ */
+export function formatCurrency(amount: number, currency = "CAD"): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
-    maximumFractionDigits: amount % 1 === 0 ? 0 : 2,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount);
 }
 

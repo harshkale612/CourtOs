@@ -1,12 +1,13 @@
 "use client";
 
 import type { Reservation } from "@/types";
-import { getCourt } from "@/lib/mock/lookup";
+import { getCourt, sectionName } from "@/lib/mock/lookup";
 import { SPORTS } from "@/lib/constants/sports";
 import { BOOKING_STATUS } from "@/lib/constants/statuses";
 import { formatCurrency, formatRelativeDay, formatTimeRange } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
 import { Badge } from "@/components/ui/badge";
+import { BookingTypeBadge } from "@/components/ui/booking-type-badge";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 
@@ -36,8 +37,16 @@ export function ReservationCard({
       </div>
 
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <p className="truncate font-semibold text-foreground">{court?.name ?? "Court"}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="truncate font-semibold text-foreground">
+            {court?.name ?? "Court"}
+            {reservation.sectionId && (
+              <span className="text-ink-secondary"> · {sectionName(reservation.sectionId)}</span>
+            )}
+          </p>
+          {court?.type === "shareable" && (
+            <BookingTypeBadge type={reservation.bookingType} className={cn(compact && "hidden sm:inline-flex")} />
+          )}
           <Badge tone={status.tone} className={cn(compact && "hidden sm:inline-flex")}>
             {status.label}
           </Badge>

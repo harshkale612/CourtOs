@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import type { Sport } from "@/types";
 import { ANCHOR_DATE, addDays } from "@/lib/mock/prng";
-import { courtName, memberName } from "@/lib/mock/lookup";
+import { reservationCourtLabel, memberName } from "@/lib/mock/lookup";
 import { SPORTS, SPORT_LIST } from "@/lib/constants/sports";
 import { BOOKING_STATUS } from "@/lib/constants/statuses";
 import { formatCurrency, formatTimeRange } from "@/lib/utils/format";
@@ -14,6 +14,7 @@ import { AdminHeader } from "@/features/admin/admin-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { BookingTypeBadge } from "@/components/ui/booking-type-badge";
 import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -92,6 +93,7 @@ export default function AdminReservationsPage() {
                 <TableRow>
                   <TableHead>Member</TableHead>
                   <TableHead>Court</TableHead>
+                  <TableHead className="hidden sm:table-cell">Type</TableHead>
                   <TableHead>Time</TableHead>
                   <TableHead className="hidden md:table-cell">Channel</TableHead>
                   <TableHead>Status</TableHead>
@@ -102,7 +104,8 @@ export default function AdminReservationsPage() {
                 {filtered.map((r) => (
                   <TableRow key={r.id}>
                     <TableCell className="font-medium text-foreground">{memberName(r.userId)}</TableCell>
-                    <TableCell><span className="inline-flex items-center gap-1.5">{SPORTS[r.sport].emoji} {courtName(r.courtId)}</span></TableCell>
+                    <TableCell><span className="inline-flex items-center gap-1.5">{SPORTS[r.sport].emoji} {reservationCourtLabel(r)}</span></TableCell>
+                    <TableCell className="hidden sm:table-cell"><BookingTypeBadge type={r.bookingType} /></TableCell>
                     <TableCell className="tnum">{formatTimeRange(r.start, r.end)}</TableCell>
                     <TableCell className="hidden capitalize md:table-cell">{r.createdVia}</TableCell>
                     <TableCell><Badge tone={BOOKING_STATUS[r.status].tone}>{BOOKING_STATUS[r.status].label}</Badge></TableCell>

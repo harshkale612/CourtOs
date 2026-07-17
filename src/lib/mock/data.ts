@@ -1,7 +1,8 @@
 import type {
+  BookingScope,
   Coach,
   Court,
-  CourtSurface,
+  CourtSection,
   EventRegistration,
   Facility,
   Invoice,
@@ -20,6 +21,7 @@ import type {
 } from "@/types";
 import { SPORT_LIST } from "@/lib/constants/sports";
 import { addDays, ANCHOR_DATE, atTime, createRng, rngHelpers } from "./prng";
+import { hasConflict } from "./availability";
 import { avatarPortrait, courtImage, eventImage } from "./images";
 
 /* -------------------------------------------------------------------------- */
@@ -30,78 +32,149 @@ const rng = createRng(20260626);
 const h = rngHelpers(rng);
 
 const FIRST = [
-  "Anna", "Marcus", "Sofia", "Liam", "Olivia", "Noah", "Emma", "Ethan", "Maya",
-  "Lucas", "Isla", "Leo", "Aria", "Kai", "Zoe", "Theo", "Nina", "Owen", "Ivy", "Jude",
+  "Emma", "Liam", "Olivia", "Noah", "Ava", "Jacob", "Sophia", "William", "Chloe",
+  "Ethan", "Maya", "Lucas", "Zoe", "Benjamin", "Aisha", "Mateo", "Priya", "Owen", "Léa", "Ryan",
 ];
 const LAST = [
-  "Lee", "Carter", "Reyes", "Novak", "Bennett", "Hayes", "Flores", "Whit", "Stone",
-  "Park", "Sato", "Okafor", "Cruz", "Morgan", "Patel", "Nguyen", "Brooks", "Ali",
+  "Tremblay", "Smith", "Nguyen", "Patel", "Roy", "Wong", "Gagnon", "Brown", "Singh",
+  "Martin", "Lee", "Chen", "Bouchard", "Kaur", "Anderson", "Côté", "Ali", "Fortin", "Reyes", "MacDonald",
 ];
-
-const SURFACES: Record<Sport, CourtSurface[]> = {
-  tennis: ["hard", "clay", "grass"],
-  pickleball: ["acrylic", "hard"],
-  padel: ["turf", "acrylic"],
-  badminton: ["wood"],
-  squash: ["wood", "acrylic"],
-};
 
 /* ---- Organization & facilities ---- */
 export const org: Organization = {
-  id: "org_volley",
-  name: "Riverside Racquet Club",
-  slug: "riverside",
-  timezone: "America/New_York",
-  currency: "USD",
+  id: "org_courtos",
+  name: "Baseline Racquet Club",
+  slug: "baseline",
+  timezone: "America/Toronto",
+  currency: "CAD",
   sports: SPORT_LIST.map((s) => s.id),
 };
 
 export const facilities: Facility[] = [
-  { id: "fac_main", orgId: org.id, name: "Main Pavilion", address: "120 Riverside Dr", environmentDefault: "indoor" },
-  { id: "fac_garden", orgId: org.id, name: "Garden Courts", address: "120 Riverside Dr (East)", environmentDefault: "outdoor" },
+  { id: "fac_main", orgId: org.id, name: "Main Pavilion", address: "120 Lakeshore Blvd, Toronto", environmentDefault: "indoor" },
+  { id: "fac_garden", orgId: org.id, name: "Garden Courts", address: "120 Lakeshore Blvd, Toronto (East)", environmentDefault: "outdoor" },
 ];
 
-/* ---- Courts ---- */
+/* -------------------------------------------------------------------------- */
+/*  Physical Courts                                                            */
+/*  Whole courts are numbered (Court 1…); shareable courts are lettered        */
+/*  (Court A…), each divided into independently-priced sections.               */
+/* -------------------------------------------------------------------------- */
+
+interface WholeSpec {
+  id: string;
+  name: string;
+  sport: Sport;
+  surface: Court["surface"];
+  environment: Court["environment"];
+  facilityId: string;
+  rate: number;
+}
+
+interface ShareableSpec {
+  id: string;
+  name: string;
+  sport: Sport;
+  surface: Court["surface"];
+  environment: Court["environment"];
+  facilityId: string;
+  wholeRate: number;
+  sections: { label: string; price: number }[];
+}
+
+// Realistic Canadian racquet-club rates (CAD/hour).
+const WHOLE_COURTS: WholeSpec[] = [
+  { id: "court_1", name: "Court 1", sport: "tennis", surface: "hard", environment: "outdoor", facilityId: "fac_garden", rate: 52 },
+  { id: "court_2", name: "Court 2", sport: "tennis", surface: "clay", environment: "outdoor", facilityId: "fac_garden", rate: 58 },
+  { id: "court_3", name: "Court 3", sport: "tennis", surface: "hard", environment: "indoor", facilityId: "fac_main", rate: 46 },
+  { id: "court_4", name: "Court 4", sport: "pickleball", surface: "acrylic", environment: "indoor", facilityId: "fac_main", rate: 38 },
+  { id: "court_5", name: "Court 5", sport: "padel", surface: "turf", environment: "outdoor", facilityId: "fac_garden", rate: 64 },
+  { id: "court_6", name: "Court 6", sport: "padel", surface: "turf", environment: "indoor", facilityId: "fac_main", rate: 60 },
+  { id: "court_7", name: "Court 7", sport: "squash", surface: "wood", environment: "indoor", facilityId: "fac_main", rate: 34 },
+  { id: "court_8", name: "Court 8", sport: "squash", surface: "wood", environment: "indoor", facilityId: "fac_main", rate: 36 },
+];
+
+const SHAREABLE_COURTS: ShareableSpec[] = [
+  {
+    id: "court_a", name: "Court A", sport: "badminton", surface: "wood", environment: "indoor", facilityId: "fac_main",
+    wholeRate: 72,
+    sections: [{ label: "A", price: 26 }, { label: "B", price: 30 }, { label: "C", price: 22 }],
+  },
+  {
+    id: "court_b", name: "Court B", sport: "pickleball", surface: "acrylic", environment: "indoor", facilityId: "fac_main",
+    wholeRate: 80,
+    sections: [{ label: "A", price: 30 }, { label: "B", price: 28 }],
+  },
+  {
+    id: "court_c", name: "Court C", sport: "badminton", surface: "wood", environment: "indoor", facilityId: "fac_main",
+    wholeRate: 68,
+    sections: [{ label: "A", price: 24 }, { label: "B", price: 26 }, { label: "C", price: 24 }],
+  },
+  {
+    id: "court_d", name: "Court D", sport: "tennis", surface: "hard", environment: "outdoor", facilityId: "fac_garden",
+    wholeRate: 88,
+    sections: [{ label: "A", price: 34 }, { label: "B", price: 34 }],
+  },
+];
+
 function buildCourts(): Court[] {
-  const courts: Court[] = [];
-  const layout: { sport: Sport; count: number }[] = [
-    { sport: "tennis", count: 4 },
-    { sport: "pickleball", count: 4 },
-    { sport: "padel", count: 2 },
-    { sport: "badminton", count: 2 },
-    { sport: "squash", count: 2 },
-  ];
-  for (const { sport, count } of layout) {
-    for (let i = 0; i < count; i++) {
-      const env = h.pick(["indoor", "outdoor"] as const);
-      courts.push({
-        id: `court_${sport}_${i + 1}`,
-        facilityId: env === "indoor" ? "fac_main" : "fac_garden",
-        name: `${capitalize(sport)} ${i + 1}`,
-        sport,
-        surface: h.pick(SURFACES[sport]),
-        environment: env,
-        isActive: h.chance(0.94),
-        openTime: "06:00",
-        closeTime: "23:00",
-        hourlyRate: h.pick([24, 28, 32, 36, 40, 48]),
-        imageUrl: courtImage(sport, i),
-      });
-    }
-  }
-  return courts;
+  const whole: Court[] = WHOLE_COURTS.map((c, i) => ({
+    id: c.id,
+    facilityId: c.facilityId,
+    name: c.name,
+    sport: c.sport,
+    surface: c.surface,
+    environment: c.environment,
+    isActive: true,
+    openTime: "06:00",
+    closeTime: "23:00",
+    type: "whole",
+    hourlyRate: c.rate,
+    imageUrl: courtImage(c.sport, i),
+  }));
+
+  const shareable: Court[] = SHAREABLE_COURTS.map((c, i) => {
+    const sections: CourtSection[] = c.sections.map((s) => ({
+      id: `${c.id}_sec_${s.label.toLowerCase()}`,
+      courtId: c.id,
+      name: `Section ${s.label}`,
+      shortLabel: s.label,
+      hourlyPrice: s.price,
+      isActive: true,
+    }));
+    return {
+      id: c.id,
+      facilityId: c.facilityId,
+      name: c.name,
+      sport: c.sport,
+      surface: c.surface,
+      environment: c.environment,
+      isActive: true,
+      openTime: "06:00",
+      closeTime: "23:00",
+      type: "shareable",
+      hourlyRate: c.wholeRate, // price to book the ENTIRE court
+      sections,
+      imageUrl: courtImage(c.sport, i),
+    };
+  });
+
+  return [...whole, ...shareable];
 }
 export const courts = buildCourts();
+
+/** Flat list of every section across all shareable courts (for lookups/analytics). */
+export const sections: CourtSection[] = courts.flatMap((c) => c.sections ?? []);
 
 /* ---- Users ---- */
 export const currentUser: User = {
   id: "user_anna",
   orgId: org.id,
   role: "member",
-  name: "Anna Lee",
-  email: "anna@example.com",
-  avatarUrl: avatarPortrait("Anna Lee"),
-  phone: "+1 (555) 014-2231",
+  name: "Ava Tremblay",
+  email: "ava@example.com",
+  avatarUrl: avatarPortrait("Ava Tremblay"),
+  phone: "+1 (416) 555-0142",
   joinedAt: addDays(ANCHOR_DATE, -420).toISOString(),
 };
 
@@ -116,7 +189,7 @@ function buildMembers(n: number): User[] {
       name,
       email: `${name.toLowerCase().replace(/[^a-z]/g, ".")}@example.com`,
       avatarUrl: avatarPortrait(name + i),
-      phone: `+1 (555) ${h.int(100, 999)}-${h.int(1000, 9999)}`,
+      phone: `+1 (${h.pick([416, 604, 514, 403, 613])}) 555-${h.int(1000, 9999)}`,
       joinedAt: addDays(ANCHOR_DATE, -h.int(10, 700)).toISOString(),
     });
   }
@@ -134,14 +207,14 @@ function buildCoaches(n: number): Coach[] {
       orgId: org.id,
       role: "coach",
       name,
-      email: `${name.toLowerCase().replace(/[^a-z]/g, ".")}@riverside.club`,
+      email: `${name.toLowerCase().replace(/[^a-z]/g, ".")}@baseline.club`,
       avatarUrl: avatarPortrait("coach" + name),
-      phone: `+1 (555) ${h.int(100, 999)}-${h.int(1000, 9999)}`,
+      phone: `+1 (${h.pick([416, 604, 514, 403, 613])}) 555-${h.int(1000, 9999)}`,
       joinedAt: addDays(ANCHOR_DATE, -h.int(200, 1200)).toISOString(),
       specialties: h.sample(SPORT_LIST.map((s) => s.id), h.int(1, 2)),
       bio: "Certified coach with a decade of competitive and teaching experience.",
       rating: Number(h.float(4.3, 5).toFixed(1)),
-      hourlyRate: h.pick([60, 70, 80, 90, 110]),
+      hourlyRate: h.pick([55, 70, 85, 100, 120]),
       availability: [
         { dayOfWeek: 1, startTime: "08:00", endTime: "16:00" },
         { dayOfWeek: 3, startTime: "10:00", endTime: "18:00" },
@@ -157,17 +230,17 @@ export const coaches = buildCoaches(6);
 export const plans: MembershipPlan[] = [
   {
     id: "plan_social", orgId: org.id, name: "Social", description: "Casual play, pay-as-you-go perks.",
-    price: 29, interval: "monthly", includedBookings: 4, accentColor: "#06b6d4", popular: false,
+    price: 49, interval: "monthly", includedBookings: 4, accentColor: "#06b6d4", popular: false,
     perks: ["4 included bookings / mo", "Member booking rates", "Event access"],
   },
   {
     id: "plan_premier", orgId: org.id, name: "Premier", description: "For regulars who play every week.",
-    price: 79, interval: "monthly", includedBookings: 16, accentColor: "#6366f1", popular: true,
+    price: 129, interval: "monthly", includedBookings: 16, accentColor: "#6366f1", popular: true,
     perks: ["16 included bookings / mo", "7-day advance booking", "Guest passes", "Priority waitlist", "Free clinics"],
   },
   {
     id: "plan_elite", orgId: org.id, name: "Elite", description: "Unlimited everything, white-glove.",
-    price: 149, interval: "monthly", includedBookings: -1, accentColor: "#8b5cf6", popular: false,
+    price: 229, interval: "monthly", includedBookings: -1, accentColor: "#8b5cf6", popular: false,
     perks: ["Unlimited bookings", "14-day advance booking", "Unlimited guests", "Dedicated concierge", "Free coaching credits"],
   },
 ];
@@ -182,38 +255,87 @@ export const memberships: Membership[] = members.map((m) => ({
   autoRenew: h.chance(0.8),
 }));
 
-/* ---- Reservations (around the anchor date) ---- */
+/* -------------------------------------------------------------------------- */
+/*  Reservations                                                               */
+/*  Built through the SAME conflict engine the app uses, so the seed data is   */
+/*  self-consistent: no whole booking ever coexists with a section booking on  */
+/*  the same court/time, and sibling sections book in parallel freely.         */
+/* -------------------------------------------------------------------------- */
+
 function buildReservations(): Reservation[] {
   const out: Reservation[] = [];
   let n = 0;
-  // span: 14 days back -> 10 days forward
+
+  const push = (
+    court: Court,
+    sectionId: string | undefined,
+    date: Date,
+    hour: number,
+    status: Reservation["status"],
+  ): boolean => {
+    const start = atTime(date, hour);
+    const end = atTime(date, hour + 1);
+    const startISO = start.toISOString();
+    const endISO = end.toISOString();
+    // Only enforce conflicts among slot-holding (non-cancelled) reservations.
+    if (status !== "cancelled" && hasConflict(out, court.id, sectionId, startISO, endISO)) {
+      return false;
+    }
+    const bookingType: BookingScope = sectionId ? "section" : "whole";
+    const section = sectionId ? court.sections?.find((s) => s.id === sectionId) : undefined;
+    const user = h.pick(members);
+    out.push({
+      id: `res_${++n}`,
+      courtId: court.id,
+      sectionId,
+      bookingType,
+      userId: user.id,
+      sport: court.sport,
+      start: startISO,
+      end: endISO,
+      status,
+      price: section ? section.hourlyPrice : court.hourlyRate,
+      participants: [user.name, ...h.sample(members.map((m) => m.name), h.int(0, 3))],
+      createdVia: h.pick(["web", "mobile", "admin"] as const),
+    });
+    return true;
+  };
+
+  /* --- Hand-placed demonstrative scenarios on "today" (anchor date) --- */
+  const byId = (id: string) => courts.find((c) => c.id === id)!;
+  const courtA = byId("court_a"); // badminton shareable
+  const courtB = byId("court_b"); // pickleball shareable
+  const courtD = byId("court_d"); // tennis shareable
+  const court1 = byId("court_1"); // tennis whole
+  // Whole booking overrides all sections (Court A @ 18:00)
+  push(courtA, undefined, ANCHOR_DATE, 18, "confirmed");
+  // Section booking blocks the whole court but leaves siblings free (Court B · Section A @ 19:00)
+  push(courtB, courtB.sections![0].id, ANCHOR_DATE, 19, "confirmed");
+  // Two sibling sections booked in parallel (Court D · Section A & B @ 10:00) — on the default tennis tab
+  push(courtD, courtD.sections![0].id, ANCHOR_DATE, 10, "confirmed");
+  push(courtD, courtD.sections![1].id, ANCHOR_DATE, 10, "confirmed");
+  // A plain whole-court booking (Court 1 @ 09:00)
+  push(court1, undefined, ANCHOR_DATE, 9, "confirmed");
+
+  /* --- Volume: 14 days back → 10 days forward --- */
   for (let day = -14; day <= 10; day++) {
     const date = addDays(ANCHOR_DATE, day);
-    const perDay = h.int(8, 22);
-    for (let i = 0; i < perDay; i++) {
+    const attempts = h.int(18, 30);
+    for (let i = 0; i < attempts; i++) {
       const court = h.pick(courts);
+      let sectionId: string | undefined;
+      if (court.type === "shareable" && court.sections?.length) {
+        // Bias toward section bookings so the two modes are both well-represented.
+        if (h.chance(0.6)) sectionId = h.pick(court.sections).id;
+      }
       const hour = h.int(6, 21);
-      const start = atTime(date, hour);
-      const end = atTime(date, hour + 1);
-      const user = h.pick(members);
       const isPast = day < 0;
       const status = isPast
         ? h.pick(["completed", "completed", "completed", "cancelled", "no_show"] as const)
         : day === 0
           ? h.pick(["confirmed", "confirmed", "pending"] as const)
           : h.pick(["confirmed", "confirmed", "confirmed", "pending"] as const);
-      out.push({
-        id: `res_${++n}`,
-        courtId: court.id,
-        userId: user.id,
-        sport: court.sport,
-        start: start.toISOString(),
-        end: end.toISOString(),
-        status,
-        price: court.hourlyRate,
-        participants: [user.name, ...h.sample(members.map((m) => m.name), h.int(0, 3))],
-        createdVia: h.pick(["web", "mobile", "admin"] as const),
-      });
+      push(court, sectionId, date, hour, status);
     }
   }
   return out;
@@ -251,6 +373,7 @@ function buildEvents(n: number): SportEvent[] {
     const date = addDays(ANCHOR_DATE, h.int(1, 21));
     const hour = h.int(7, 19);
     const capacity = h.pick([8, 12, 16, 20, 24]);
+    const sportCourts = courts.filter((c) => c.sport === sport);
     return {
       id: `event_${i + 1}`,
       orgId: org.id,
@@ -261,12 +384,12 @@ function buildEvents(n: number): SportEvent[] {
       description:
         "Join fellow members for a high-energy session led by our certified pros. All equipment provided.",
       coachId: h.pick(coaches).id,
-      courtId: h.pick(courts.filter((c) => c.sport === sport)).id,
+      courtId: (sportCourts.length ? h.pick(sportCourts) : h.pick(courts)).id,
       start: atTime(date, hour).toISOString(),
       end: atTime(date, hour + 2).toISOString(),
       capacity,
       registeredCount: h.int(2, capacity),
-      price: h.pick([0, 15, 20, 25, 35]),
+      price: h.pick([0, 20, 30, 45, 60]),
       skillLevel: h.pick(skills),
     };
   });
@@ -289,7 +412,7 @@ export const paymentMethods: PaymentMethod[] = [
 
 export const invoices: Invoice[] = Array.from({ length: 8 }).map((_, i) => {
   const paid = i > 0;
-  const amount = h.pick([29, 79, 149, 20, 35, 56]);
+  const amount = h.pick([49, 129, 229, 26, 34, 60]);
   return {
     id: `inv_${1000 + i}`,
     orgId: org.id,
@@ -308,7 +431,7 @@ export const transactions: Transaction[] = Array.from({ length: 40 }).map((_, i)
     id: `txn_${5000 + i}`,
     orgId: org.id,
     userId: user.id,
-    amount: h.pick([24, 28, 32, 29, 79, 149, 20, 35]),
+    amount: h.pick([52, 58, 38, 49, 129, 229, 26, 34, 30]),
     type: h.pick(["booking", "membership", "event", "booking", "booking"] as const),
     status: h.pick(["paid", "paid", "paid", "refunded"] as const),
     method: h.pick(["Visa •4242", "Mastercard •5318", "Amex •0005"]),
@@ -320,12 +443,12 @@ export const transactions: Transaction[] = Array.from({ length: 40 }).map((_, i)
 export const notifications: Notification[] = [
   {
     id: "ntf_1", userId: currentUser.id, type: "waitlist",
-    title: "A court just opened up", body: "Tennis 2 is free at 6:00 PM today. Claim it before it's gone.",
+    title: "A section just opened up", body: "Court B · Section B is free at 6:00 PM today. Claim it before it's gone.",
     read: false, createdAt: addDays(ANCHOR_DATE, 0).toISOString(), href: "/app/booking",
   },
   {
     id: "ntf_2", userId: currentUser.id, type: "booking",
-    title: "Booking confirmed", body: "Padel 1 · Tomorrow, 7:00 PM is all set.",
+    title: "Booking confirmed", body: "Court A · Section A · Tomorrow, 7:00 PM is all set.",
     read: false, createdAt: addDays(ANCHOR_DATE, 0).toISOString(), href: "/app/reservations",
   },
   {
@@ -341,15 +464,13 @@ export const notifications: Notification[] = [
 ];
 
 /* -------------------------------------------------------------------------- */
-function capitalize(s: string) {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
 
 /** The single in-memory mock database. Mutated by mock mutations at runtime. */
 export const db = {
   org,
   facilities,
   courts,
+  sections,
   members,
   coaches,
   currentUser,

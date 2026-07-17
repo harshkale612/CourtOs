@@ -21,6 +21,26 @@ export type BookingStatus =
   | "completed"
   | "no_show";
 
+/**
+ * A physical court is either booked whole, or divided into independently
+ * bookable sections. This drives pricing, availability, and conflict rules.
+ */
+export type CourtType = "whole" | "shareable";
+
+/** What a single reservation targets: the entire court, or one section. */
+export type BookingScope = "whole" | "section";
+
+/** Live status of a bookable lane (section or whole court) at a point in time. */
+export type SectionStatus = "available" | "occupied";
+
+/**
+ * Why a slot is unavailable — powers precise, honest UI messaging.
+ * - `self`     — this exact lane already has a reservation
+ * - `whole`    — a whole-court booking is overriding this section
+ * - `section`  — a section booking is blocking the whole-court lane
+ */
+export type BlockReason = "self" | "whole" | "section";
+
 export type WaitlistStatus = "waiting" | "offered" | "claimed" | "expired";
 
 export type PlanInterval = "monthly" | "quarterly" | "annual";
@@ -47,7 +67,7 @@ export interface Organization {
   slug: string;
   logoUrl?: string;
   timezone: string;
-  currency: string; // ISO 4217, e.g. "USD"
+  currency: string; // ISO 4217, e.g. "CAD"
   sports: Sport[];
 }
 
@@ -59,6 +79,30 @@ export interface Facility {
   environmentDefault: CourtEnvironment;
 }
 
+/**
+ * A divisible, independently-bookable section of a SHAREABLE court.
+ * Each section has its own price, availability, and reservation schedule.
+ */
+export interface CourtSection {
+  id: ID;
+  courtId: ID; // parent physical court
+  name: string; // "Section A"
+  shortLabel: string; // "A" — compact grid/badge label
+  hourlyPrice: number;
+  isActive: boolean;
+}
+
+/**
+ * A Physical Court — the primary facility entity.
+ *
+ * - `type: "whole"`     → booked as a single unit; `hourlyRate` is its price.
+ * - `type: "shareable"` → can be booked whole OR by section. `hourlyRate` is the
+ *   price to book the ENTIRE court (the "whole court price"); `sections` carry
+ *   their own independent prices.
+ *
+ * `hourlyRate` is therefore always "the price to book the entire physical court"
+ * — see `wholeCourtPrice()` in lib/utils/pricing for the named accessor.
+ */
 export interface Court {
   id: ID;
   facilityId: ID;
@@ -69,7 +113,9 @@ export interface Court {
   isActive: boolean;
   openTime: string; // "06:00"
   closeTime: string; // "23:00"
-  hourlyRate: number;
+  type: CourtType;
+  hourlyRate: number; // whole-court hourly price (a.k.a. wholeCourtPrice)
+  sections?: CourtSection[]; // SHAREABLE only
   imageUrl?: string;
 }
 
@@ -130,13 +176,15 @@ export interface Membership {
 
 export interface Reservation {
   id: ID;
-  courtId: ID;
+  courtId: ID; // physical court
+  sectionId?: ID; // set when a single section was booked
+  bookingType: BookingScope; // "whole" | "section"
   userId: ID;
   sport: Sport;
   start: string; // ISO datetime
   end: string; // ISO datetime
   status: BookingStatus;
-  price: number;
+  price: number; // resolved from the whole-court or section price
   participants: string[]; // names or user ids
   notes?: string;
   createdVia: BookingChannel;
@@ -257,9 +305,12 @@ export interface Paginated<T> {
 
 export interface SlotAvailability {
   courtId: ID;
+  sectionId?: ID; // present for section lanes
+  bookingType: BookingScope; // which lane this slot belongs to
   start: string;
   end: string;
   available: boolean;
   price: number;
   reservationId?: ID;
+  blockedBy?: BlockReason; // why unavailable (for honest UI messaging)
 }

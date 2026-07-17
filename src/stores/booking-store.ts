@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Sport } from "@/types";
+import type { BookingScope, Sport } from "@/types";
 import { ANCHOR_DATE } from "@/lib/mock/prng";
 
 /**
@@ -9,6 +9,9 @@ import { ANCHOR_DATE } from "@/lib/mock/prng";
 export interface SlotSelection {
   courtId: string;
   courtName: string;
+  bookingType: BookingScope;
+  sectionId?: string;
+  sectionName?: string;
   start: string;
   end: string;
   price: number;

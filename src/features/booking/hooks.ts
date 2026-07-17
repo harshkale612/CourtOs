@@ -13,6 +13,13 @@ export function useCourts(sport?: Sport) {
   });
 }
 
+export function useSectionStatuses() {
+  return useQuery({
+    queryKey: queryKeys.courts.sectionStatuses,
+    queryFn: () => api.courts.sectionStatuses(),
+  });
+}
+
 export function useAvailability(sport: Sport, dateISO: string) {
   return useQuery({
     queryKey: queryKeys.courts.availability(sport, dateISO),
@@ -29,17 +36,21 @@ export function useCreateReservation(sport: Sport, dateISO: string, userId: stri
     onMutate: async (input) => {
       await qc.cancelQueries({ queryKey: availKey });
       const prev = qc.getQueryData<SlotAvailability[]>(availKey);
-      // optimistically mark the slot unavailable
+      // optimistically mark the exact lane unavailable; invalidation below
+      // reconciles cross-lane blocking (whole ↔ section) from the server.
       qc.setQueryData<SlotAvailability[]>(availKey, (old) =>
         old?.map((s) =>
-          s.courtId === input.courtId && s.start === input.start ? { ...s, available: false } : s,
+          s.courtId === input.courtId && s.start === input.start && s.sectionId === input.sectionId
+            ? { ...s, available: false }
+            : s,
         ),
       );
       return { prev };
     },
-    onError: (_err, _input, ctx) => {
+    onError: (err, _input, ctx) => {
       if (ctx?.prev) qc.setQueryData(availKey, ctx.prev);
-      toast.error("That slot couldn't be booked. Please try another.");
+      const msg = err instanceof Error && err.message ? err.message : "That slot couldn't be booked. Please try another.";
+      toast.error(msg);
     },
     onSuccess: () => {
       toast.success("Booking confirmed!", { description: "See it in your reservations." });

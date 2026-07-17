@@ -24,5 +24,15 @@ export const api = {
 };
 
 export { ApiError } from "./client";
-export type { Kpi, RevenuePoint, HeatCell, SportBreakdown } from "./analytics";
+export type {
+  Kpi,
+  FacilitySummary,
+  RevenuePoint,
+  HeatCell,
+  SportBreakdown,
+  TypeBreakdown,
+  CourtRevenue,
+  SectionRevenue,
+  UtilPoint,
+} from "./analytics";
 export type { CreateReservationInput } from "./reservations";

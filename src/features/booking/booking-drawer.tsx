@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import type { Court, SlotAvailability, Sport } from "@/types";
 import { SPORTS } from "@/lib/constants/sports";
+import { BOOKING_SCOPE } from "@/lib/constants/courts";
 import { formatCurrency, formatLongDate, formatTimeRange } from "@/lib/utils/format";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,10 @@ export function BookingDrawer({
   const create = useCreateReservation(sport, dateISO, userId);
   const accent = SPORTS[sport].color;
 
+  const section = slot?.sectionId ? court?.sections?.find((s) => s.id === slot.sectionId) : undefined;
+  const scope = slot ? BOOKING_SCOPE[slot.bookingType] : null;
+  const bookingLabel = slot?.bookingType === "section" && section ? section.name : "Entire court";
+
   const reset = () => {
     setGuests([]);
     setNotes("");
@@ -52,6 +57,7 @@ export function BookingDrawer({
     try {
       await create.mutateAsync({
         courtId: court.id,
+        sectionId: slot.sectionId,
         userId,
         start: slot.start,
         end: slot.end,
@@ -92,7 +98,8 @@ export function BookingDrawer({
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
               <h3 className="mt-6 text-2xl font-bold tracking-tight">You&apos;re on court! 🎾</h3>
               <p className="mt-2 text-ink-secondary">
-                {court?.name} · {slot && formatTimeRange(slot.start, slot.end)}
+                {court?.name}
+                {section ? ` · ${section.name}` : ""} · {slot && formatTimeRange(slot.start, slot.end)}
               </p>
             </motion.div>
           </div>
@@ -111,11 +118,33 @@ export function BookingDrawer({
               style={{ boxShadow: `inset 0 0 0 1px color-mix(in oklab, ${accent} 25%, transparent)` }}
             >
               <div className="absolute -right-8 -top-8 size-24 rounded-full opacity-30 blur-2xl" style={{ background: accent }} />
-              <SportBadge sport={sport} />
-              <h3 className="mt-3 text-xl font-bold tracking-tight">{court.name}</h3>
+              <div className="flex flex-wrap items-center gap-2">
+                <SportBadge sport={sport} />
+                {scope && (
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold"
+                    style={{
+                      color: scope.color,
+                      borderColor: `color-mix(in oklab, ${scope.color} 30%, transparent)`,
+                      background: `color-mix(in oklab, ${scope.color} 12%, transparent)`,
+                    }}
+                  >
+                    <Icon name={scope.icon} className="size-3" /> {scope.label}
+                  </span>
+                )}
+              </div>
+              <h3 className="mt-3 text-xl font-bold tracking-tight">
+                {court.name}
+                {section && <span className="text-ink-secondary"> · {section.name}</span>}
+              </h3>
               <dl className="mt-4 space-y-2.5 text-sm">
                 <Row icon="calendar" label="Date" value={formatLongDate(dateISO)} />
                 <Row icon="clock" label="Time" value={formatTimeRange(slot.start, slot.end)} />
+                <Row
+                  icon={slot.bookingType === "section" ? "grid-2x2" : "maximize"}
+                  label="Booking"
+                  value={bookingLabel}
+                />
                 <Row icon="map-pin" label="Surface" value={`${court.surface} · ${court.environment}`} />
               </dl>
             </div>
@@ -162,8 +191,8 @@ export function BookingDrawer({
         {court && slot && (
           <div className="border-t border-[var(--border-subtle)] p-6">
             <div className="mb-4 flex items-center justify-between">
-              <span className="text-sm text-ink-secondary">Total</span>
-              <span className="tnum text-2xl font-bold tracking-tight">{formatCurrency(slot.price)}</span>
+              <span className="text-sm text-ink-secondary">Total · {bookingLabel}</span>
+              <span className="tnum text-2xl font-bold tracking-tight">{formatCurrency(slot.price)}<span className="text-sm font-normal text-ink-tertiary">/hr</span></span>
             </div>
             <Button size="lg" className="w-full" onClick={confirm} disabled={create.isPending}>
               {create.isPending ? "Confirming…" : "Confirm booking"}

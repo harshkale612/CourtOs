@@ -1,34 +1,59 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
 import { ANCHOR_DATE } from "@/lib/mock/prng";
-import { courtName, memberName } from "@/lib/mock/lookup";
+import { reservationCourtLabel, memberName } from "@/lib/mock/lookup";
 import { SPORTS } from "@/lib/constants/sports";
+import { COURT_TYPE } from "@/lib/constants/courts";
 import { BOOKING_STATUS } from "@/lib/constants/statuses";
 import { formatCurrency, formatTime } from "@/lib/utils/format";
 import { CHART_COLORS } from "@/components/charts/chart-theme";
 import { AdminHeader } from "@/features/admin/admin-header";
 import { KpiCards } from "@/features/analytics/kpi-cards";
-import { useRevenueSeries, useSportBreakdown, useUtilizationHeatmap } from "@/features/analytics/hooks";
+import { FacilitySummary } from "@/features/analytics/facility-summary";
+import {
+  useBookingTypeBreakdown,
+  useRevenueByCourt,
+  useRevenueSeries,
+  useUtilizationHeatmap,
+} from "@/features/analytics/hooks";
 import { useReservationsByDate } from "@/features/admin/hooks";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BookingTypeBadge } from "@/components/ui/booking-type-badge";
 import { AreaChart } from "@/components/charts/area-chart";
+import { BarChart } from "@/components/charts/bar-chart";
 import { DonutChart } from "@/components/charts/donut-chart";
 import { Heatmap } from "@/components/charts/heatmap";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default function AdminDashboardPage() {
   const { data: revenue } = useRevenueSeries();
-  const { data: sports } = useSportBreakdown();
+  const { data: byType } = useBookingTypeBreakdown();
+  const { data: byCourt } = useRevenueByCourt();
   const { data: heatmap } = useUtilizationHeatmap();
   const { data: today } = useReservationsByDate(ANCHOR_DATE.toISOString());
 
-  const donutData = (sports ?? []).map((s) => ({ name: s.label, value: s.bookings, color: s.color }));
-  const totalBookings = (sports ?? []).reduce((sum, s) => sum + s.bookings, 0);
+  const typeBookings = (byType ?? []).map((t) => ({ name: t.label, value: t.bookings, color: t.color }));
+  const totalTypeBookings = (byType ?? []).reduce((s, t) => s + t.bookings, 0);
+
+  const courtBars = (byCourt ?? []).map((c) => ({ name: c.name, revenue: c.revenue, color: c.color }));
+
+  // Revenue grouped by physical court type (whole vs shareable), derived client-side.
+  const revenueByCourtType = useMemo(() => {
+    const acc: Record<string, number> = { whole: 0, shareable: 0 };
+    for (const c of byCourt ?? []) acc[c.type] += c.revenue;
+    return [
+      { name: COURT_TYPE.whole.label, value: acc.whole, color: COURT_TYPE.whole.color },
+      { name: COURT_TYPE.shareable.label, value: acc.shareable, color: COURT_TYPE.shareable.color },
+    ];
+  }, [byCourt]);
+  const totalCourtTypeRevenue = revenueByCourtType.reduce((s, r) => s + r.value, 0);
+
   const recent = (today ?? [])
     .filter((r) => r.status !== "cancelled")
     .sort((a, b) => +new Date(b.start) - +new Date(a.start))
@@ -38,7 +63,7 @@ export default function AdminDashboardPage() {
     <div className="space-y-6">
       <AdminHeader
         title="Dashboard"
-        subtitle="Riverside Racquet Club · today at a glance"
+        subtitle="Baseline Sports Club · today at a glance"
         actions={
           <>
             <Button variant="secondary" size="sm"><Icon name="calendar" className="size-4" /> This month</Button>
@@ -47,14 +72,16 @@ export default function AdminDashboardPage() {
         }
       />
 
-      <KpiCards />
+      <KpiCards keys={["revenueToday", "wholeBookings", "sectionBookings", "courtUtil"]} />
 
-      {/* charts row */}
+      <FacilitySummary />
+
+      {/* trend + booking-type split */}
       <div className="grid gap-5 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader className="flex-row items-center justify-between">
             <div>
-              <CardTitle>Revenue & bookings</CardTitle>
+              <CardTitle>Revenue &amp; bookings</CardTitle>
               <CardDescription>Last 12 months</CardDescription>
             </div>
             <Badge tone="success" dot>+12.4%</Badge>
@@ -76,19 +103,19 @@ export default function AdminDashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Bookings by sport</CardTitle>
-            <CardDescription>This period</CardDescription>
+            <CardTitle>Whole vs. section</CardTitle>
+            <CardDescription>Bookings by type</CardDescription>
           </CardHeader>
           <CardContent>
-            {sports ? (
+            {byType ? (
               <>
-                <DonutChart data={donutData} centerValue={totalBookings.toLocaleString()} centerLabel="bookings" height={220} />
+                <DonutChart data={typeBookings} centerValue={totalTypeBookings.toLocaleString()} centerLabel="bookings" height={220} />
                 <div className="mt-4 space-y-2">
-                  {sports.map((s) => (
-                    <div key={s.sport} className="flex items-center gap-2 text-sm">
-                      <span className="size-2.5 rounded-full" style={{ background: s.color }} />
-                      <span className="text-ink-secondary">{s.label}</span>
-                      <span className="tnum ml-auto font-medium text-foreground">{s.bookings}</span>
+                  {byType.map((t) => (
+                    <div key={t.key} className="flex items-center gap-2 text-sm">
+                      <span className="size-2.5 rounded-full" style={{ background: t.color }} />
+                      <span className="text-ink-secondary">{t.label}</span>
+                      <span className="tnum ml-auto font-medium text-foreground">{t.bookings}</span>
                     </div>
                   ))}
                 </div>
@@ -100,10 +127,51 @@ export default function AdminDashboardPage() {
         </Card>
       </div>
 
+      {/* revenue by court + revenue by court type */}
+      <div className="grid gap-5 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Revenue by court</CardTitle>
+            <CardDescription>Whole &amp; shareable courts, this period</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {byCourt ? (
+              <BarChart data={courtBars} xKey="name" barKey="revenue" name="Revenue" colorKey="color" valueFormatter={(v) => formatCurrency(v)} />
+            ) : (
+              <Skeleton className="h-72 w-full" />
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Revenue by court type</CardTitle>
+            <CardDescription>Whole vs. shareable</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {byCourt ? (
+              <>
+                <DonutChart data={revenueByCourtType} centerValue={formatCurrency(totalCourtTypeRevenue)} centerLabel="total" valueFormatter={(v) => formatCurrency(v)} height={220} />
+                <div className="mt-4 space-y-2">
+                  {revenueByCourtType.map((r) => (
+                    <div key={r.name} className="flex items-center gap-2 text-sm">
+                      <span className="size-2.5 rounded-full" style={{ background: r.color }} />
+                      <span className="text-ink-secondary">{r.name}</span>
+                      <span className="tnum ml-auto font-medium text-foreground">{formatCurrency(r.value)}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <Skeleton className="h-72 w-full" />
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
       {/* heatmap */}
       <Card>
         <CardHeader>
-          <CardTitle>Court utilization</CardTitle>
+          <CardTitle>Occupancy heatmap</CardTitle>
           <CardDescription>Demand by day &amp; hour — spot your peaks and dead zones</CardDescription>
         </CardHeader>
         <CardContent>{heatmap ? <Heatmap cells={heatmap} /> : <Skeleton className="h-48 w-full" />}</CardContent>
@@ -123,6 +191,7 @@ export default function AdminDashboardPage() {
               <TableRow>
                 <TableHead>Member</TableHead>
                 <TableHead>Court</TableHead>
+                <TableHead className="hidden sm:table-cell">Type</TableHead>
                 <TableHead>Time</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
@@ -134,9 +203,10 @@ export default function AdminDashboardPage() {
                   <TableCell className="font-medium text-foreground">{memberName(r.userId)}</TableCell>
                   <TableCell>
                     <span className="inline-flex items-center gap-1.5">
-                      <span>{SPORTS[r.sport].emoji}</span> {courtName(r.courtId)}
+                      <span>{SPORTS[r.sport].emoji}</span> {reservationCourtLabel(r)}
                     </span>
                   </TableCell>
+                  <TableCell className="hidden sm:table-cell"><BookingTypeBadge type={r.bookingType} /></TableCell>
                   <TableCell className="tnum">{formatTime(r.start)}</TableCell>
                   <TableCell><Badge tone={BOOKING_STATUS[r.status].tone}>{BOOKING_STATUS[r.status].label}</Badge></TableCell>
                   <TableCell className="tnum text-right font-medium text-foreground">{formatCurrency(r.price)}</TableCell>

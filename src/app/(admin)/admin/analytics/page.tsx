@@ -5,7 +5,16 @@ import { formatCurrency } from "@/lib/utils/format";
 import { CHART_COLORS } from "@/components/charts/chart-theme";
 import { AdminHeader } from "@/features/admin/admin-header";
 import { KpiCards } from "@/features/analytics/kpi-cards";
-import { useRevenueSeries, useSportBreakdown, useUtilizationHeatmap } from "@/features/analytics/hooks";
+import {
+  useBookingTypeBreakdown,
+  useCourtUtilization,
+  useRevenueByCourt,
+  useRevenueBySection,
+  useRevenueSeries,
+  useSectionUtilization,
+  useSportBreakdown,
+  useUtilizationHeatmap,
+} from "@/features/analytics/hooks";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -23,12 +32,24 @@ function hourLabel(h: number) {
 
 export default function AnalyticsPage() {
   const { data: revenue } = useRevenueSeries();
+  const { data: byType } = useBookingTypeBreakdown();
+  const { data: byCourt } = useRevenueByCourt();
+  const { data: bySection } = useRevenueBySection();
+  const { data: sectionUtil } = useSectionUtilization();
+  const { data: courtUtil } = useCourtUtilization();
   const { data: sports } = useSportBreakdown();
   const { data: heatmap } = useUtilizationHeatmap();
 
-  const sportBars = (sports ?? []).map((s) => ({ name: s.label, bookings: s.bookings, color: s.color }));
+  const revenueByType = (byType ?? []).map((t) => ({ name: t.label, value: t.revenue, color: t.color }));
+  const totalTypeRevenue = (byType ?? []).reduce((s, t) => s + t.revenue, 0);
+  const bookingsByType = (byType ?? []).map((t) => ({ name: t.label, bookings: t.bookings, color: t.color }));
+
+  const courtBars = (byCourt ?? []).map((c) => ({ name: c.name, revenue: c.revenue, color: c.color }));
+  const sectionBars = (bySection ?? []).map((s) => ({ name: s.label, revenue: s.revenue, color: s.color }));
+  const sectionUtilBars = (sectionUtil ?? []).map((s) => ({ name: s.label, utilization: s.utilization, color: s.color }));
+  const courtUtilBars = (courtUtil ?? []).map((c) => ({ name: c.label, utilization: c.utilization, color: c.color }));
   const revenueDonut = (sports ?? []).map((s) => ({ name: s.label, value: s.revenue, color: s.color }));
-  const totalRevenue = (sports ?? []).reduce((sum, s) => sum + s.revenue, 0);
+  const totalSportRevenue = (sports ?? []).reduce((s, x) => s + x.revenue, 0);
 
   const peakHours = useMemo(() => {
     const byHour = new Map<number, number>();
@@ -42,7 +63,7 @@ export default function AnalyticsPage() {
     <div className="space-y-6">
       <AdminHeader
         title="Analytics"
-        subtitle="Understand demand, revenue, and utilization"
+        subtitle="Revenue, utilization & demand — by court, section, and booking type"
         actions={
           <>
             <Button variant="secondary" size="sm"><Icon name="calendar" className="size-4" /> Last 12 months</Button>
@@ -51,11 +72,11 @@ export default function AnalyticsPage() {
         }
       />
 
-      <KpiCards />
+      <KpiCards keys={["revenuePeriod", "bookings", "courtUtil", "sectionUtil"]} />
 
       <Card>
         <CardHeader>
-          <CardTitle>Revenue & bookings trend</CardTitle>
+          <CardTitle>Revenue &amp; bookings trend</CardTitle>
           <CardDescription>Monthly performance over the last year</CardDescription>
         </CardHeader>
         <CardContent>
@@ -76,42 +97,101 @@ export default function AnalyticsPage() {
         </CardContent>
       </Card>
 
+      {/* whole vs section — revenue + bookings */}
       <div className="grid gap-5 lg:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle>Bookings by sport</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Whole-court vs. section revenue</CardTitle>
+            <CardDescription>Where revenue comes from</CardDescription>
+          </CardHeader>
           <CardContent>
-            {sports ? <BarChart data={sportBars} xKey="name" barKey="bookings" colorKey="color" /> : <Skeleton className="h-72 w-full" />}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader><CardTitle>Revenue by sport</CardTitle></CardHeader>
-          <CardContent>
-            {sports ? (
-              <DonutChart data={revenueDonut} centerValue={formatCurrency(totalRevenue)} centerLabel="total" valueFormatter={(v) => formatCurrency(v)} />
+            {byType ? (
+              <>
+                <DonutChart data={revenueByType} centerValue={formatCurrency(totalTypeRevenue)} centerLabel="total" valueFormatter={(v) => formatCurrency(v)} />
+                <div className="mt-4 space-y-2">
+                  {byType.map((t) => (
+                    <div key={t.key} className="flex items-center gap-2 text-sm">
+                      <span className="size-2.5 rounded-full" style={{ background: t.color }} />
+                      <span className="text-ink-secondary">{t.label} revenue</span>
+                      <span className="tnum ml-auto font-medium text-foreground">{formatCurrency(t.revenue)}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
             ) : (
               <Skeleton className="h-72 w-full" />
             )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle>Bookings by type</CardTitle><CardDescription>Entire court vs. individual sections</CardDescription></CardHeader>
+          <CardContent>
+            {byType ? <BarChart data={bookingsByType} xKey="name" barKey="bookings" name="Bookings" colorKey="color" /> : <Skeleton className="h-72 w-full" />}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* revenue by court + by section */}
+      <div className="grid gap-5 lg:grid-cols-2">
+        <Card>
+          <CardHeader><CardTitle>Revenue by court</CardTitle><CardDescription>All physical courts</CardDescription></CardHeader>
+          <CardContent>
+            {byCourt ? <BarChart data={courtBars} xKey="name" barKey="revenue" name="Revenue" colorKey="color" valueFormatter={(v) => formatCurrency(v)} /> : <Skeleton className="h-72 w-full" />}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle>Revenue by section</CardTitle><CardDescription>Across shareable courts</CardDescription></CardHeader>
+          <CardContent>
+            {bySection ? <BarChart data={sectionBars} xKey="name" barKey="revenue" name="Revenue" colorKey="color" valueFormatter={(v) => formatCurrency(v)} /> : <Skeleton className="h-72 w-full" />}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* occupancy: court + section */}
+      <div className="grid gap-5 lg:grid-cols-2">
+        <Card>
+          <CardHeader><CardTitle>Court occupancy</CardTitle><CardDescription>Relative utilization by court</CardDescription></CardHeader>
+          <CardContent>
+            {courtUtil ? <BarChart data={courtUtilBars} xKey="name" barKey="utilization" name="Utilization" colorKey="color" valueFormatter={(v) => `${v}%`} /> : <Skeleton className="h-72 w-full" />}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle>Section occupancy</CardTitle><CardDescription>Relative utilization by section</CardDescription></CardHeader>
+          <CardContent>
+            {sectionUtil ? <BarChart data={sectionUtilBars} xKey="name" barKey="utilization" name="Utilization" colorKey="color" valueFormatter={(v) => `${v}%`} /> : <Skeleton className="h-72 w-full" />}
           </CardContent>
         </Card>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Court utilization heatmap</CardTitle>
+          <CardTitle>Occupancy heatmap</CardTitle>
           <CardDescription>Demand intensity by day &amp; hour</CardDescription>
         </CardHeader>
         <CardContent>{heatmap ? <Heatmap cells={heatmap} /> : <Skeleton className="h-48 w-full" />}</CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Peak demand by hour</CardTitle>
-          <CardDescription>When your courts are busiest</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {heatmap ? <BarChart data={peakHours} xKey="name" barKey="demand" name="Demand" /> : <Skeleton className="h-72 w-full" />}
-        </CardContent>
-      </Card>
+      <div className="grid gap-5 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Peak demand by hour</CardTitle>
+            <CardDescription>When your courts are busiest</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {heatmap ? <BarChart data={peakHours} xKey="name" barKey="demand" name="Demand" valueFormatter={(v) => `${v}%`} /> : <Skeleton className="h-72 w-full" />}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle>Revenue by sport</CardTitle><CardDescription>This period</CardDescription></CardHeader>
+          <CardContent>
+            {sports ? (
+              <DonutChart data={revenueDonut} centerValue={formatCurrency(totalSportRevenue)} centerLabel="total" valueFormatter={(v) => formatCurrency(v)} />
+            ) : (
+              <Skeleton className="h-72 w-full" />
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
