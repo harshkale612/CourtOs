@@ -27,10 +27,10 @@ export function ProductPreview() {
         initial={{ opacity: 0, y: 24, rotateX: 8 }}
         animate={{ opacity: 1, y: 0, rotateX: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-        className="glow-border overflow-hidden rounded-3xl bg-raised/90 shadow-[var(--sh-4)] backdrop-blur-xl"
+        className="glow-border overflow-hidden rounded-3xl bg-raised/90 shadow-sh-4 backdrop-blur-xl"
       >
         {/* window chrome */}
-        <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-5 py-3.5">
+        <div className="flex items-center justify-between border-b border-(--border-subtle) px-5 py-3.5">
           <div className="flex items-center gap-2">
             <span className="size-3 rounded-full bg-danger/70" />
             <span className="size-3 rounded-full bg-warning/70" />
@@ -66,7 +66,7 @@ export function ProductPreview() {
                     key={i}
                     className={cn(
                       "h-7 rounded-md border transition-colors",
-                      state === 0 && "border-[var(--border-subtle)] bg-white/[0.02]",
+                      state === 0 && "border-(--border-subtle) bg-fill-1",
                       state === 2 && "border-transparent ring-2 ring-brand",
                     )}
                     style={
@@ -92,7 +92,7 @@ export function ProductPreview() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: [0, -8, 0] }}
         transition={{ opacity: { delay: 0.7 }, y: { duration: 5, repeat: Infinity, ease: "easeInOut" } }}
-        className="glass absolute -left-4 bottom-10 hidden items-center gap-3 rounded-2xl p-3 shadow-[var(--sh-3)] sm:flex"
+        className="glass absolute -left-4 bottom-10 hidden items-center gap-3 rounded-2xl p-3 shadow-sh-3 sm:flex"
       >
         <span className="flex size-9 items-center justify-center rounded-xl bg-success/15 text-success">
           <Icon name="check" className="size-4" />
@@ -108,7 +108,7 @@ export function ProductPreview() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: [0, 8, 0] }}
         transition={{ opacity: { delay: 0.9 }, y: { duration: 6, repeat: Infinity, ease: "easeInOut" } }}
-        className="glass absolute -right-4 -top-4 hidden rounded-2xl p-3.5 shadow-[var(--sh-3)] sm:block"
+        className="glass absolute -right-4 -top-4 hidden rounded-2xl p-3.5 shadow-sh-3 sm:block"
       >
         <p className="text-[11px] text-ink-tertiary">Today&apos;s revenue</p>
         <p className="tnum mt-0.5 text-xl font-bold text-foreground">$3,248</p>

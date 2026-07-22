@@ -113,7 +113,7 @@ export default function DashboardPage() {
                   <button
                     key={sport.id}
                     onClick={() => quickBook(sport.id)}
-                    className="flex flex-col items-center gap-2 rounded-2xl border border-[var(--border-subtle)] bg-surface p-4 transition-all duration-200 hover:-translate-y-1 hover:border-[var(--border-strong)]"
+                    className="flex flex-col items-center gap-2 rounded-2xl border border-(--border-subtle) bg-surface p-4 transition-all duration-200 hover:-translate-y-1 hover:border-(--border-strong)"
                   >
                     <span className="text-2xl">{sport.emoji}</span>
                     <span className="text-xs font-medium text-foreground">{sport.label}</span>
@@ -142,7 +142,7 @@ export default function DashboardPage() {
                     <span className="text-ink-secondary">Bookings used</span>
                     <span className="tnum font-medium text-foreground">{used} / {included}</span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-white/[0.06]">
+                  <div className="h-2 overflow-hidden rounded-full bg-fill-4">
                     <div className="h-full rounded-full bg-grad-brand" style={{ width: `${Math.min(100, (used / Math.max(1, included)) * 100)}%` }} />
                   </div>
                 </div>

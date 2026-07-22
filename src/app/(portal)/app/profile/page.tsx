@@ -65,7 +65,7 @@ export default function ProfilePage() {
                   onClick={() => setFavorites((f) => (active ? f.filter((x) => x !== s.id) : [...f, s.id]))}
                   className={cn(
                     "flex items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-medium transition-all",
-                    active ? "border-transparent text-white" : "border-[var(--border-default)] bg-surface text-ink-secondary hover:border-[var(--border-strong)]",
+                    active ? "border-transparent text-white" : "border-(--border-default) bg-surface text-ink-secondary hover:border-(--border-strong)",
                   )}
                   style={active ? { background: s.color } : undefined}
                 >

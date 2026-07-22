@@ -34,7 +34,7 @@ export default function ContactPage() {
               <a
                 key={c.title}
                 href={c.href}
-                className="flex items-center gap-4 rounded-2xl border border-[var(--border-subtle)] bg-raised p-4 transition-colors hover:border-[var(--border-strong)]"
+                className="flex items-center gap-4 rounded-2xl border border-(--border-subtle) bg-raised p-4 transition-colors hover:border-(--border-strong)"
               >
                 <span className="flex size-11 items-center justify-center rounded-xl bg-grad-brand-soft text-brand">
                   <Icon name={c.icon} className="size-5" />

@@ -57,7 +57,7 @@ export default function AdminSettingsPage() {
           <CardTitle>Sports offered</CardTitle>
           <CardDescription>Enable the sports your club supports.</CardDescription>
         </CardHeader>
-        <CardContent className="divide-y divide-[var(--border-subtle)]">
+        <CardContent className="divide-y divide-(--border-subtle)">
           {SPORT_LIST.map((s) => {
             const on = sports.includes(s.id);
             return (

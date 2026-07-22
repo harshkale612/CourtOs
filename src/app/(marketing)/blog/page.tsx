@@ -29,9 +29,9 @@ export default function BlogPage() {
             <StaggerItem key={post.slug}>
               <Link
                 href={`/blog/${post.slug}`}
-                className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--border-subtle)] bg-raised transition-all duration-300 hover:-translate-y-1 hover:border-[var(--border-strong)] hover:shadow-[var(--sh-3)]"
+                className="group flex h-full flex-col overflow-hidden rounded-2xl border border-(--border-subtle) bg-raised transition-all duration-300 hover:-translate-y-1 hover:border-(--border-strong) hover:shadow-sh-3"
               >
-                <div className="relative aspect-[16/10] overflow-hidden">
+                <div className="relative aspect-16/10 overflow-hidden">
                   <Image
                     src={post.cover}
                     alt={post.title}
@@ -39,7 +39,7 @@ export default function BlogPage() {
                     sizes="(max-width: 768px) 100vw, 33vw"
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-raised)] to-transparent opacity-60" />
+                  <div className="absolute inset-0 bg-linear-to-t from-raised to-transparent opacity-60" />
                   <Badge tone="info" className="absolute left-3 top-3">
                     {post.category}
                   </Badge>

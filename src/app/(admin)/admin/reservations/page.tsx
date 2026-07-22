@@ -73,7 +73,7 @@ export default function AdminReservationsPage() {
             onClick={() => setSportFilter(c.id)}
             className={cn(
               "shrink-0 rounded-xl border px-3.5 py-2 text-sm font-medium transition-all",
-              sportFilter === c.id ? "border-transparent bg-grad-brand text-white" : "border-[var(--border-default)] bg-surface text-ink-secondary hover:border-[var(--border-strong)]",
+              sportFilter === c.id ? "border-transparent bg-grad-brand text-white" : "border-(--border-default) bg-surface text-ink-secondary hover:border-(--border-strong)",
             )}
           >
             {c.label}

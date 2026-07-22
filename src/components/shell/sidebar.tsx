@@ -16,7 +16,7 @@ export function Sidebar({ sections }: { sections: NavSection[] }) {
     <TooltipProvider>
       <aside
         className={cn(
-          "sticky top-0 hidden h-dvh shrink-0 flex-col border-r border-[var(--border-subtle)] bg-surface/60 backdrop-blur-xl transition-[width] duration-300 ease-[var(--e-out)] lg:flex",
+          "sticky top-0 hidden h-dvh shrink-0 flex-col border-r border-(--border-subtle) bg-surface/60 backdrop-blur-xl transition-[width] duration-300 ease-(--e-out) lg:flex",
           sidebarCollapsed ? "w-[76px]" : "w-64",
         )}
       >
@@ -42,7 +42,7 @@ export function Sidebar({ sections }: { sections: NavSection[] }) {
         <button
           onClick={toggleSidebar}
           className={cn(
-            "m-3 flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-ink-tertiary transition-colors hover:bg-white/[0.04] hover:text-foreground",
+            "m-3 flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-ink-tertiary transition-colors hover:bg-fill-3 hover:text-foreground",
             sidebarCollapsed && "justify-center px-0",
           )}
           aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}

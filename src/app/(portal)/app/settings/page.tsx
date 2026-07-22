@@ -31,7 +31,7 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader><CardTitle>Notifications</CardTitle></CardHeader>
-        <CardContent className="divide-y divide-[var(--border-subtle)]">
+        <CardContent className="divide-y divide-(--border-subtle)">
           {PREFS.map((pref) => (
             <div key={pref.key} className="flex items-center justify-between gap-4 py-4 first:pt-0 last:pb-0">
               <div>

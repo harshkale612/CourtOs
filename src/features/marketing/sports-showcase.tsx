@@ -17,7 +17,7 @@ export function SportsShowcase() {
       {SPORT_LIST.map((sport) => (
         <StaggerItem key={sport.id} className="group">
           <div
-            className="relative aspect-[3/4] overflow-hidden rounded-2xl border border-[var(--border-subtle)] transition-all duration-300 group-hover:-translate-y-1"
+            className="relative aspect-3/4 overflow-hidden rounded-2xl border border-(--border-subtle) transition-all duration-300 group-hover:-translate-y-1"
             style={{ ["--sport-accent" as string]: sport.color }}
           >
             <Image
@@ -27,7 +27,8 @@ export function SportsShowcase() {
               sizes="(max-width: 768px) 50vw, 20vw"
               className="object-cover transition-transform duration-500 group-hover:scale-110"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-canvas)] via-[var(--bg-canvas)]/40 to-transparent" />
+            {/* Fixed dark scrim so the label stays legible over the photo in both themes */}
+            <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/35 to-transparent" />
             <div
               className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
               style={{ boxShadow: `inset 0 0 0 2px ${sport.color}` }}

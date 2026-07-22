@@ -17,13 +17,13 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border-default)] px-6 py-16 text-center",
+        "flex flex-col items-center justify-center rounded-2xl border border-dashed border-(--border-default) px-6 py-16 text-center",
         className,
       )}
     >
       <div className="relative mb-5">
         <div className="absolute inset-0 -z-10 rounded-2xl bg-grad-brand opacity-30 blur-2xl" />
-        <div className="flex size-14 items-center justify-center rounded-2xl border border-[var(--border-default)] bg-raised">
+        <div className="flex size-14 items-center justify-center rounded-2xl border border-(--border-default) bg-raised">
           <Icon name={icon} className="size-6 text-brand" />
         </div>
       </div>

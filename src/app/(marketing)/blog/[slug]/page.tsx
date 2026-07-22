@@ -62,7 +62,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             <span className="font-medium text-foreground">{post.author}</span>
           </div>
 
-          <div className="relative mt-8 aspect-[16/9] overflow-hidden rounded-3xl border border-[var(--border-subtle)]">
+          <div className="relative mt-8 aspect-16/9 overflow-hidden rounded-3xl border border-(--border-subtle)">
             <Image src={post.cover} alt={post.title} fill sizes="(max-width: 768px) 100vw, 768px" className="object-cover" priority />
           </div>
 

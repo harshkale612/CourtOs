@@ -5,12 +5,12 @@ import { cn } from "@/lib/utils/cn";
 const cardVariants = cva("rounded-2xl text-card-foreground transition-all duration-300", {
   variants: {
     variant: {
-      default: "border border-[var(--border-subtle)] bg-raised shadow-[var(--sh-2)]",
-      glass: "glass shadow-[var(--sh-2)]",
+      default: "border border-(--border-subtle) bg-raised shadow-sh-2",
+      glass: "glass shadow-sh-2",
       interactive:
-        "border border-[var(--border-subtle)] bg-raised shadow-[var(--sh-2)] hover:-translate-y-1 hover:border-[var(--border-strong)] hover:shadow-[var(--sh-3)] cursor-pointer",
+        "border border-(--border-subtle) bg-raised shadow-sh-2 hover:-translate-y-1 hover:border-(--border-strong) hover:shadow-sh-3 cursor-pointer",
       featured:
-        "glow-border bg-raised shadow-[var(--glow-brand)] border border-transparent",
+        "glow-border bg-raised shadow-glow-brand border border-transparent",
     },
   },
   defaultVariants: { variant: "default" },

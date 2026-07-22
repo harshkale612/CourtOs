@@ -4,16 +4,31 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ============================================================
-   COURTOS DESIGN TOKENS  (source of truth — Phase 2)
-   Dark-mode-first. :root carries the dark theme.
+   COURTOS DESIGN TOKENS  (source of truth)
+   Two first-class themes that share one personality.
+   • :root, .dark  → Dark theme (original, unchanged in feel)
+   • .light        → Light theme (premium, intentionally designed)
+   Only theme-dependent primitives are overridden in .light;
+   everything downstream reads var() and re-themes automatically.
    ============================================================ */
-:root {
+:root,
+.dark {
+  color-scheme: dark;
+
   /* --- Backgrounds (layered elevation) --- */
   --bg-canvas: #080b14;
   --bg-surface: #0b0f19;
   --bg-raised: #111827;
   --bg-overlay: rgba(8, 11, 20, 0.72);
   --bg-glass: rgba(255, 255, 255, 0.04);
+
+  /* --- Translucent fill ladder (hover / zebra / chips / subtle surfaces) ---
+     Dark = white tint over dark. Light overrides = ink tint over light. */
+  --fill-1: rgba(255, 255, 255, 0.02);
+  --fill-2: rgba(255, 255, 255, 0.03);
+  --fill-3: rgba(255, 255, 255, 0.04);
+  --fill-4: rgba(255, 255, 255, 0.06);
+  --fill-5: rgba(255, 255, 255, 0.1);
 
   /* --- Borders (hairline system) --- */
   --border-subtle: rgba(255, 255, 255, 0.06);
@@ -28,7 +43,7 @@
   --text-on-accent: #ffffff;
   --text-disabled: rgba(148, 163, 184, 0.45);
 
-  /* --- Brand --- */
+  /* --- Brand (identical across themes — branding is constant) --- */
   --brand: #6366f1;
   --brand-from: #3b82f6;
   --brand-via: #6366f1;
@@ -65,6 +80,9 @@
     radial-gradient(35% 45% at 85% 15%, rgba(139, 92, 246, 0.14), transparent 60%),
     radial-gradient(50% 60% at 50% 100%, rgba(6, 182, 212, 0.1), transparent 60%), var(--bg-canvas);
 
+  /* Atmosphere strength — multiplies glow-blob opacity (dimmed in light). */
+  --atmo-strength: 1;
+
   /* --- Shadows (cool-tinted) --- */
   --sh-1: 0 1px 2px rgba(2, 6, 18, 0.4);
   --sh-2: 0 4px 16px -4px rgba(2, 6, 18, 0.5);
@@ -75,6 +93,13 @@
   --glow-brand: 0 8px 32px -6px rgba(99, 102, 241, 0.55);
   --glow-emerald: 0 8px 32px -6px rgba(16, 185, 129, 0.5);
   --glow-pink: 0 8px 32px -6px rgba(236, 72, 153, 0.5);
+
+  /* --- Data surfaces (charts / loaders / controls) --- */
+  --chart-grid: rgba(255, 255, 255, 0.06);
+  --chart-axis: rgba(148, 163, 184, 0.5);
+  --skeleton-base: rgba(255, 255, 255, 0.05);
+  --skeleton-shimmer: rgba(255, 255, 255, 0.06);
+  --track-off: rgba(255, 255, 255, 0.1);
 
   /* --- Radii --- */
   --radius: 0.75rem; /* 12px base for shadcn */
@@ -108,11 +133,11 @@
   --popover-foreground: var(--text-primary);
   --primary: var(--brand);
   --primary-foreground: #ffffff;
-  --secondary: rgba(255, 255, 255, 0.06);
+  --secondary: var(--fill-4);
   --secondary-foreground: var(--text-primary);
-  --muted: rgba(255, 255, 255, 0.04);
+  --muted: var(--fill-3);
   --muted-foreground: var(--text-secondary);
-  --accent: rgba(255, 255, 255, 0.06);
+  --accent: var(--fill-4);
   --accent-foreground: var(--text-primary);
   --destructive: var(--danger);
   --destructive-foreground: #ffffff;
@@ -128,10 +153,83 @@
   --sidebar-foreground: var(--text-secondary);
   --sidebar-primary: var(--brand);
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgba(255, 255, 255, 0.06);
+  --sidebar-accent: var(--fill-4);
   --sidebar-accent-foreground: var(--text-primary);
   --sidebar-border: var(--border-subtle);
   --sidebar-ring: var(--brand);
+}
+
+/* ============================================================
+   ☀️  LIGHT THEME — premium, airy, intentional.
+   Overrides only theme-dependent primitives; structure, spacing,
+   hierarchy, radii and motion are inherited from the base above.
+   Same specificity as :root, but declared later → wins on <html.light>.
+   ============================================================ */
+.light {
+  color-scheme: light;
+
+  /* --- Backgrounds — soft canvas, pure-white surfaces, elevation via shadow --- */
+  --bg-canvas: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-raised: #ffffff;
+  --bg-overlay: rgba(15, 23, 42, 0.28);
+  --bg-glass: rgba(255, 255, 255, 0.72);
+
+  /* --- Fills — ink tint over light (soft gray hover/zebra/chips) --- */
+  --fill-1: rgba(15, 23, 42, 0.025);
+  --fill-2: rgba(15, 23, 42, 0.035);
+  --fill-3: rgba(15, 23, 42, 0.05);
+  --fill-4: rgba(15, 23, 42, 0.06);
+  --fill-5: rgba(15, 23, 42, 0.09);
+
+  /* --- Borders — hairline ink --- */
+  --border-subtle: rgba(15, 23, 42, 0.06);
+  --border-default: rgba(15, 23, 42, 0.1);
+  --border-strong: rgba(15, 23, 42, 0.14);
+  --border-glow: rgba(59, 130, 246, 0.45);
+
+  /* --- Text — high-contrast slate ramp --- */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #64748b;
+  --text-on-accent: #ffffff;
+  --text-disabled: rgba(100, 116, 139, 0.45);
+
+  /* --- Gradients tuned for light surfaces --- */
+  --grad-brand-soft: linear-gradient(135deg, rgba(59, 130, 246, 0.14), rgba(139, 92, 246, 0.12));
+  --grad-text: linear-gradient(120deg, #0f172a 0%, #334155 42%, #6366f1 100%);
+  --mesh-bg:
+    radial-gradient(40% 50% at 15% 10%, rgba(59, 130, 246, 0.07), transparent 60%),
+    radial-gradient(35% 45% at 85% 15%, rgba(139, 92, 246, 0.06), transparent 60%),
+    radial-gradient(50% 60% at 50% 100%, rgba(6, 182, 212, 0.045), transparent 60%), var(--bg-canvas);
+  --atmo-strength: 0.5;
+
+  /* --- Shadows — soft, airy, ink-tinted (never heavy) --- */
+  --sh-1: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --sh-2:
+    0 2px 8px -2px rgba(15, 23, 42, 0.08),
+    0 1px 2px rgba(15, 23, 42, 0.04);
+  --sh-3:
+    0 12px 28px -10px rgba(15, 23, 42, 0.14),
+    0 2px 6px -2px rgba(15, 23, 42, 0.06);
+  --sh-4:
+    0 24px 56px -18px rgba(15, 23, 42, 0.2),
+    0 4px 12px -4px rgba(15, 23, 42, 0.08);
+
+  /* --- Glows — softer brand halos for CTAs & active states --- */
+  --glow-brand: 0 10px 30px -8px rgba(59, 130, 246, 0.35);
+  --glow-emerald: 0 10px 30px -8px rgba(16, 185, 129, 0.32);
+  --glow-pink: 0 10px 30px -8px rgba(236, 72, 153, 0.3);
+
+  /* --- Data surfaces --- */
+  --chart-grid: rgba(15, 23, 42, 0.07);
+  --chart-axis: rgba(71, 85, 105, 0.6);
+  --skeleton-base: rgba(15, 23, 42, 0.06);
+  --skeleton-shimmer: rgba(255, 255, 255, 0.7);
+  --track-off: #cbd5e1;
+
+  /* --- Effects — slightly deeper frost reads premium on white --- */
+  --blur-glass: 20px;
 }
 
 /* ============================================================
@@ -184,6 +282,11 @@
   --color-glass: var(--bg-glass);
   --color-ink-secondary: var(--text-secondary);
   --color-ink-tertiary: var(--text-tertiary);
+  --color-fill-1: var(--fill-1);
+  --color-fill-2: var(--fill-2);
+  --color-fill-3: var(--fill-3);
+  --color-fill-4: var(--fill-4);
+  --color-fill-5: var(--fill-5);
   --color-brand: var(--brand);
   --color-brand-from: var(--brand-from);
   --color-brand-via: var(--brand-via);
@@ -228,6 +331,15 @@
   --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
+/* Gradient fills as first-class utilities so state variants
+   (e.g. data-[state=checked]:bg-grad-brand on <Switch/>) generate. */
+@utility bg-grad-brand {
+  background-image: var(--grad-brand);
+}
+@utility bg-grad-brand-soft {
+  background-image: var(--grad-brand-soft);
+}
+
 /* ============================================================
    Base layer
    ============================================================ */
@@ -237,7 +349,6 @@
   }
 
   html {
-    color-scheme: dark;
     scroll-behavior: smooth;
   }
 
@@ -259,6 +370,10 @@
     background: rgba(99, 102, 241, 0.35);
     color: #fff;
   }
+  .light ::selection {
+    background: rgba(59, 130, 246, 0.22);
+    color: #0f172a;
+  }
 
   /* premium scrollbars */
   ::-webkit-scrollbar {
@@ -278,11 +393,41 @@
     background: rgba(255, 255, 255, 0.16);
     background-clip: padding-box;
   }
+  .light ::-webkit-scrollbar-thumb {
+    background: rgba(15, 23, 42, 0.15);
+    background-clip: padding-box;
+  }
+  .light ::-webkit-scrollbar-thumb:hover {
+    background: rgba(15, 23, 42, 0.28);
+    background-clip: padding-box;
+  }
 
   /* visible, premium focus ring */
   :focus-visible {
     outline: 2px solid var(--brand);
     outline-offset: 2px;
+  }
+}
+
+/* ============================================================
+   Theme cross-fade — scoped to the moment of switching only.
+   The toggle stamps .theme-transition on <html> for ~300ms so the
+   whole UI cross-fades color/shadow over 250ms without ever
+   animating layout or fighting per-component hover transitions.
+   ============================================================ */
+@layer base {
+  .theme-transition,
+  .theme-transition *,
+  .theme-transition *::before,
+  .theme-transition *::after {
+    transition:
+      background-color 250ms var(--e-out),
+      border-color 250ms var(--e-out),
+      color 250ms var(--e-out),
+      fill 250ms var(--e-out),
+      stroke 250ms var(--e-out),
+      box-shadow 250ms var(--e-out) !important;
+    transition-delay: 0ms !important;
   }
 }
 
@@ -304,12 +449,6 @@
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-  }
-  .bg-grad-brand {
-    background-image: var(--grad-brand);
-  }
-  .bg-grad-brand-soft {
-    background-image: var(--grad-brand-soft);
   }
   /* 1px gradient ring (glow-border) */
   .glow-border {

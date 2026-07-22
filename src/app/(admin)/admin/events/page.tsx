@@ -63,7 +63,7 @@ export default function AdminEventsPage() {
                       <TableCell>{formatRelativeDay(e.start)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <div className="h-1.5 w-16 overflow-hidden rounded-full bg-white/[0.06]">
+                          <div className="h-1.5 w-16 overflow-hidden rounded-full bg-fill-4">
                             <div className="h-full rounded-full" style={{ width: `${pct}%`, background: SPORTS[e.sport].color }} />
                           </div>
                           <span className="tnum text-xs text-ink-tertiary">{e.registeredCount}/{e.capacity}</span>

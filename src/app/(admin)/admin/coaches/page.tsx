@@ -49,7 +49,7 @@ export default function CoachesPage() {
                   </span>
                 ))}
               </div>
-              <div className="mt-5 flex items-center justify-between border-t border-[var(--border-subtle)] pt-4">
+              <div className="mt-5 flex items-center justify-between border-t border-(--border-subtle) pt-4">
                 <span className="text-sm text-ink-secondary">From <span className="font-semibold text-foreground">{formatCurrency(coach.hourlyRate)}</span>/hr</span>
                 <Button variant="ghost" size="sm">View schedule</Button>
               </div>

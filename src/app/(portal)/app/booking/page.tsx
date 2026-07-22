@@ -41,16 +41,16 @@ export default function BookingPage() {
       {/* legend */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-ink-tertiary">
         <span className="flex items-center gap-1.5">
-          <span className="size-3 rounded border border-[var(--border-default)] bg-white/[0.02]" /> Available
+          <span className="size-3 rounded border border-(--border-default) bg-fill-1" /> Available
         </span>
         <span className="flex items-center gap-1.5">
           <span className="size-3 rounded" style={{ background: SPORTS[sport].color }} /> Selected
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="size-3 rounded bg-white/[0.015]" /> Booked
+          <span className="size-3 rounded bg-fill-1" /> Booked
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="flex size-3 items-center justify-center rounded bg-white/[0.02] text-[8px] text-ink-tertiary/60">✕</span>
+          <span className="flex size-3 items-center justify-center rounded bg-fill-1 text-[8px] text-ink-tertiary/60">✕</span>
           Blocked by another lane
         </span>
       </div>

@@ -93,7 +93,7 @@ export function OnboardingWizard() {
       {/* progress */}
       {!onWelcome && (
         <div className="mx-auto w-full max-w-xl px-6">
-          <div className="h-1 overflow-hidden rounded-full bg-white/[0.06]">
+          <div className="h-1 overflow-hidden rounded-full bg-fill-4">
             <motion.div
               className="h-full rounded-full bg-grad-brand"
               animate={{ width: `${progress}%` }}
@@ -168,7 +168,7 @@ function WelcomeStep({
     : ["Set up your club", "Add courts & sports", "Invite your team"];
   return (
     <div className="text-center">
-      <span className="mx-auto flex size-16 items-center justify-center rounded-3xl bg-grad-brand text-3xl shadow-[var(--glow-brand)]">
+      <span className="mx-auto flex size-16 items-center justify-center rounded-3xl bg-grad-brand text-3xl shadow-glow-brand">
         👋
       </span>
       <h1 className="mt-6 text-3xl font-bold tracking-tight sm:text-4xl">

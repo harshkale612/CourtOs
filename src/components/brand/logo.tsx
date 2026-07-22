@@ -6,7 +6,7 @@ export function LogoMark({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "relative inline-flex size-9 items-center justify-center rounded-xl bg-grad-brand shadow-[var(--glow-brand)]",
+        "relative inline-flex size-9 items-center justify-center rounded-xl bg-grad-brand shadow-glow-brand",
         className,
       )}
     >

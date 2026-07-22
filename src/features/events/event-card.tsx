@@ -37,8 +37,8 @@ export function EventCard({
   const coach = coachName(event.coachId);
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--border-subtle)] bg-raised transition-all duration-300 hover:-translate-y-1 hover:border-[var(--border-strong)] hover:shadow-[var(--sh-3)]">
-      <Link href={`/app/events/${event.id}`} className="relative block aspect-[16/9] overflow-hidden">
+    <div className="group flex flex-col overflow-hidden rounded-2xl border border-(--border-subtle) bg-raised transition-all duration-300 hover:-translate-y-1 hover:border-(--border-strong) hover:shadow-sh-3">
+      <Link href={`/app/events/${event.id}`} className="relative block aspect-16/9 overflow-hidden">
         {event.coverUrl && (
           <Image
             src={event.coverUrl}
@@ -48,7 +48,7 @@ export function EventCard({
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-raised)] via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-raised via-transparent to-transparent" />
         <div className="absolute left-3 top-3 flex gap-2">
           <Badge tone="neutral" className="bg-black/40 backdrop-blur">{TYPE_LABEL[event.type]}</Badge>
         </div>
@@ -83,7 +83,7 @@ export function EventCard({
               {spotsLeft > 0 ? `${spotsLeft} left` : "Full"}
             </span>
           </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+          <div className="h-1.5 overflow-hidden rounded-full bg-fill-4">
             <div
               className="h-full rounded-full"
               style={{ width: `${pct}%`, background: sport.color }}

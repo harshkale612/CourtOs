@@ -43,7 +43,7 @@ export function DemoForm() {
 
   if (submitted) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-3xl border border-[var(--border-subtle)] bg-raised p-10 text-center">
+      <div className="flex flex-col items-center justify-center rounded-3xl border border-(--border-subtle) bg-raised p-10 text-center">
         <span className="flex size-14 items-center justify-center rounded-2xl bg-success/15 text-success">
           <Icon name="check-circle" className="size-7" />
         </span>
@@ -59,7 +59,7 @@ export function DemoForm() {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="space-y-5 rounded-3xl border border-[var(--border-subtle)] bg-raised p-6 sm:p-8"
+      className="space-y-5 rounded-3xl border border-(--border-subtle) bg-raised p-6 sm:p-8"
     >
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Full name" error={errors.name?.message}>

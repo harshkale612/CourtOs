@@ -18,10 +18,17 @@ export const metadata: Metadata = {
     type: "website",
   },
   icons: { icon: "/favicon.svg" },
+  // CourtOS ships its own first-class light/dark themes, so we ask the Dark
+  // Reader extension to stand down. This also resolves the hydration warning
+  // it triggers by rewriting inline styles/attributes before React hydrates.
+  other: { "darkreader-lock": "true" },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#080B14",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#080B14" },
+    { media: "(prefers-color-scheme: light)", color: "#F8FAFC" },
+  ],
   width: "device-width",
   initialScale: 1,
 };

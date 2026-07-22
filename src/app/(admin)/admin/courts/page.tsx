@@ -134,7 +134,7 @@ function GroupHeader({ type, count }: { type: "whole" | "shareable"; count: numb
         <h2 className="text-lg font-semibold tracking-tight">{cfg.label}s</h2>
         <p className="text-xs text-ink-tertiary">{cfg.description}</p>
       </div>
-      <span className="ml-auto rounded-full bg-white/[0.06] px-2.5 py-1 text-sm font-semibold text-ink-secondary">{count}</span>
+      <span className="ml-auto rounded-full bg-fill-4 px-2.5 py-1 text-sm font-semibold text-ink-secondary">{count}</span>
     </div>
   );
 }
@@ -142,9 +142,9 @@ function GroupHeader({ type, count }: { type: "whole" | "shareable"; count: numb
 function WholeCourtCard({ court, on, onToggle }: { court: Court; on: boolean; onToggle: (v: boolean) => void }) {
   return (
     <Card className="overflow-hidden">
-      <div className="relative aspect-[16/9]">
+      <div className="relative aspect-16/9">
         {court.imageUrl && <Image src={court.imageUrl} alt={court.name} fill sizes="(max-width:1024px) 50vw, 33vw" className="object-cover" />}
-        <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-raised)] to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-raised to-transparent" />
         <div className="absolute left-3 top-3"><SportBadge sport={court.sport} className="bg-black/40 backdrop-blur" /></div>
         <div className="absolute right-3 top-3">{!on && <Badge tone="neutral" className="bg-black/50 backdrop-blur">Inactive</Badge>}</div>
       </div>
@@ -158,7 +158,7 @@ function WholeCourtCard({ court, on, onToggle }: { court: Court; on: boolean; on
             {formatCurrency(court.hourlyRate)}<span className="text-xs font-normal text-ink-tertiary">/hr</span>
           </span>
         </div>
-        <div className="mt-4 flex items-center justify-between border-t border-[var(--border-subtle)] pt-4">
+        <div className="mt-4 flex items-center justify-between border-t border-(--border-subtle) pt-4">
           <label className="flex items-center gap-2 text-sm text-ink-secondary">
             <Switch checked={on} onCheckedChange={onToggle} />
             {on ? "Active" : "Inactive"}
@@ -212,7 +212,7 @@ function ShareableCourtCard({
           <p className="text-[11px] uppercase tracking-wide text-ink-tertiary">Entire court</p>
           <p className="tnum font-bold" style={{ color: accent }}>{formatCurrency(court.hourlyRate)}<span className="text-xs font-normal text-ink-tertiary">/hr</span></p>
         </div>
-        <button onClick={() => setExpanded((v) => !v)} aria-label="Toggle sections" className="flex size-9 items-center justify-center rounded-lg border border-[var(--border-subtle)] text-ink-secondary transition-colors hover:text-foreground">
+        <button onClick={() => setExpanded((v) => !v)} aria-label="Toggle sections" className="flex size-9 items-center justify-center rounded-lg border border-(--border-subtle) text-ink-secondary transition-colors hover:text-foreground">
           <Icon name="chevron-down" className={cn("size-5 transition-transform", expanded && "rotate-180")} />
         </button>
       </div>
@@ -226,9 +226,9 @@ function ShareableCourtCard({
             transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
             className="overflow-hidden"
           >
-            <div className="border-t border-[var(--border-subtle)] p-5">
+            <div className="border-t border-(--border-subtle) p-5">
               {/* entire-court booking option */}
-              <div className="mb-4 flex items-center gap-3 rounded-xl border border-dashed border-[var(--border-default)] bg-white/[0.02] p-3.5">
+              <div className="mb-4 flex items-center gap-3 rounded-xl border border-dashed border-(--border-default) bg-fill-1 p-3.5">
                 <span className="flex size-9 items-center justify-center rounded-lg" style={{ background: `color-mix(in oklab, ${accent} 16%, transparent)`, color: accent }}>
                   <Icon name="maximize" className="size-4" />
                 </span>
@@ -246,7 +246,7 @@ function ShareableCourtCard({
                   const status = statuses?.[section.id];
                   const occupied = status === "occupied";
                   return (
-                    <div key={section.id} className="flex items-center gap-3 rounded-xl border border-[var(--border-subtle)] bg-raised p-3.5">
+                    <div key={section.id} className="flex items-center gap-3 rounded-xl border border-(--border-subtle) bg-raised p-3.5">
                       <span className="flex size-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold" style={{ background: `color-mix(in oklab, ${sAccent} 18%, transparent)`, color: sAccent }}>
                         {section.shortLabel}
                       </span>
@@ -260,7 +260,7 @@ function ShareableCourtCard({
                 })}
               </div>
 
-              <div className="mt-4 flex items-center justify-between border-t border-[var(--border-subtle)] pt-4">
+              <div className="mt-4 flex items-center justify-between border-t border-(--border-subtle) pt-4">
                 <label className="flex items-center gap-2 text-sm text-ink-secondary">
                   <Switch checked={on} onCheckedChange={onToggle} />
                   {on ? "Active" : "Inactive"}

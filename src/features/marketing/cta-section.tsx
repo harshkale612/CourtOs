@@ -8,7 +8,7 @@ import { Reveal } from "@/components/motion/reveal";
 export function CtaSection() {
   return (
     <section className="px-6 py-20 lg:py-28">
-      <Reveal className="relative mx-auto max-w-5xl overflow-hidden rounded-[2rem] border border-[var(--border-default)] bg-raised px-6 py-16 text-center sm:px-12">
+      <Reveal className="relative mx-auto max-w-5xl overflow-hidden rounded-[2rem] border border-(--border-default) bg-raised px-6 py-16 text-center sm:px-12">
         <GlowBlob color="var(--accent-blue)" size={420} opacity={0.3} className="-left-20 -top-24" />
         <GlowBlob color="var(--accent-purple)" size={420} opacity={0.3} className="-bottom-24 -right-20" />
         <h2 className="mx-auto max-w-2xl text-balance text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">

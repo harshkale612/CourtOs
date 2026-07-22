@@ -26,7 +26,7 @@ export function Hero() {
           <motion.div {...fade(0)}>
             <Link
               href="/features"
-              className="group inline-flex items-center gap-2 rounded-full border border-[var(--border-default)] bg-white/[0.03] py-1 pl-1.5 pr-3 text-xs font-medium text-ink-secondary backdrop-blur transition-colors hover:border-[var(--border-strong)]"
+              className="group inline-flex items-center gap-2 rounded-full border border-(--border-default) bg-fill-2 py-1 pl-1.5 pr-3 text-xs font-medium text-ink-secondary backdrop-blur transition-colors hover:border-(--border-strong)"
             >
               <span className="rounded-full bg-grad-brand px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
                 New
@@ -69,7 +69,7 @@ export function Hero() {
                   <span
                     key={s.id}
                     title={s.label}
-                    className="flex size-8 items-center justify-center rounded-full border-2 border-[var(--bg-canvas)] text-sm"
+                    className="flex size-8 items-center justify-center rounded-full border-2 border-canvas text-sm"
                     style={{ background: `color-mix(in oklab, ${s.color} 22%, var(--bg-raised))` }}
                   >
                     {s.emoji}

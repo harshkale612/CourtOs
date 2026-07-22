@@ -13,7 +13,7 @@ function StoryVisual({ variant, accent }: { variant: Variant; accent: string }) 
         className="absolute inset-0 -z-10 scale-90 rounded-[2rem] opacity-30 blur-[70px]"
         style={{ background: accent }}
       />
-      <div className="glow-border overflow-hidden rounded-3xl bg-raised/90 p-5 shadow-[var(--sh-3)] backdrop-blur-xl">
+      <div className="glow-border overflow-hidden rounded-3xl bg-raised/90 p-5 shadow-sh-3 backdrop-blur-xl">
         {variant === "grid" && (
           <div className="space-y-1.5">
             {Array.from({ length: 4 }).map((_, r) => (
@@ -24,7 +24,7 @@ function StoryVisual({ variant, accent }: { variant: Variant; accent: string }) 
                   return (
                     <div
                       key={c}
-                      className={cn("h-8 rounded-md border", !filled && "border-[var(--border-subtle)] bg-white/[0.02]")}
+                      className={cn("h-8 rounded-md border", !filled && "border-(--border-subtle) bg-fill-1")}
                       style={
                         selected
                           ? { background: "var(--grad-brand)", borderColor: "transparent" }
@@ -49,7 +49,7 @@ function StoryVisual({ variant, accent }: { variant: Variant; accent: string }) 
               (row, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between rounded-xl border border-[var(--border-subtle)] bg-white/[0.02] px-3.5 py-2.5"
+                  className="flex items-center justify-between rounded-xl border border-(--border-subtle) bg-fill-1 px-3.5 py-2.5"
                 >
                   <span className="text-sm text-ink-secondary">{row}</span>
                   <span

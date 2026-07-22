@@ -18,7 +18,7 @@ export function SportTabs({ value, onChange }: { value: Sport; onChange: (s: Spo
               "flex shrink-0 items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-medium transition-all duration-200",
               active
                 ? "border-transparent text-white"
-                : "border-[var(--border-default)] bg-surface text-ink-secondary hover:border-[var(--border-strong)] hover:text-foreground",
+                : "border-(--border-default) bg-surface text-ink-secondary hover:border-(--border-strong) hover:text-foreground",
             )}
             style={
               active

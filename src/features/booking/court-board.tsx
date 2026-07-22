@@ -81,7 +81,7 @@ export function CourtBoard({
 
   if (courts.length === 0) {
     return (
-      <div className="rounded-2xl border border-[var(--border-subtle)] bg-raised p-10 text-center text-ink-secondary">
+      <div className="rounded-2xl border border-(--border-subtle) bg-raised p-10 text-center text-ink-secondary">
         No courts for {SPORTS[sport].label} yet.
       </div>
     );
@@ -134,7 +134,7 @@ function GroupLabel({ type, count }: { type: "whole" | "shareable"; count: numbe
       <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-secondary">
         {type === "whole" ? "Whole courts" : "Shareable courts"}
       </h2>
-      <span className="rounded-full bg-white/[0.06] px-2 py-0.5 text-xs font-medium text-ink-tertiary">
+      <span className="rounded-full bg-fill-4 px-2 py-0.5 text-xs font-medium text-ink-tertiary">
         {count}
       </span>
     </div>
@@ -143,7 +143,7 @@ function GroupLabel({ type, count }: { type: "whole" | "shareable"; count: numbe
 
 function HourAxis({ hours, labelWidth }: { hours: string[]; labelWidth: string }) {
   return (
-    <div className="flex border-b border-[var(--border-subtle)]">
+    <div className="flex border-b border-(--border-subtle)">
       <div className={cn("shrink-0", labelWidth)} />
       {hours.map((h) => (
         <div key={h} className={cn("shrink-0 py-2 text-center text-[11px] font-medium text-ink-tertiary", CHIP)}>
@@ -180,9 +180,9 @@ function SlotChip({
         className={cn(
           "group flex h-11 w-full flex-col items-center justify-center rounded-lg border text-[11px] font-semibold transition-all duration-150",
           slot.available && !isSelected &&
-            "border-[var(--border-subtle)] bg-white/[0.02] text-ink-tertiary hover:text-white",
+            "border-(--border-subtle) bg-fill-1 text-ink-tertiary hover:text-foreground",
           !slot.available && !isSelected &&
-            "cursor-not-allowed border-transparent bg-white/[0.015] text-ink-tertiary/40",
+            "cursor-not-allowed border-transparent bg-fill-1 text-ink-tertiary/40",
           isSelected && "border-transparent text-white",
         )}
         style={isSelected ? { background: accent, boxShadow: `0 6px 20px -6px ${accent}` } : undefined}
@@ -263,14 +263,14 @@ function WholeCourtsPanel({
   return (
     <div className="space-y-4">
       <GroupLabel type="whole" count={courts.length} />
-      <div className="overflow-x-auto rounded-2xl border border-[var(--border-subtle)] bg-raised">
+      <div className="overflow-x-auto rounded-2xl border border-(--border-subtle) bg-raised">
         <div className="min-w-max">
           <HourAxis hours={hours} labelWidth={LABEL} />
           {courts.map((court) => {
             const lane = grouped.get(court.id)?.whole ?? [];
             return (
-              <div key={court.id} className="flex border-b border-[var(--border-subtle)] last:border-0">
-                <div className={cn("flex shrink-0 flex-col justify-center gap-0.5 border-r border-[var(--border-subtle)] px-4 py-2.5", LABEL)}>
+              <div key={court.id} className="flex border-b border-(--border-subtle) last:border-0">
+                <div className={cn("flex shrink-0 flex-col justify-center gap-0.5 border-r border-(--border-subtle) px-4 py-2.5", LABEL)}>
                   <span className="truncate text-sm font-semibold text-foreground">{court.name}</span>
                   <span className="flex items-center gap-1.5 text-[11px] capitalize text-ink-tertiary">
                     <span className="size-1.5 rounded-full" style={{ background: accent }} />
@@ -316,11 +316,11 @@ function ShareableCourtCard({
   const LABEL = "w-[168px]";
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[var(--border-subtle)] bg-raised">
+    <div className="overflow-hidden rounded-2xl border border-(--border-subtle) bg-raised">
       {/* header */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-white/[0.02]"
+        className="flex w-full items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-fill-1"
       >
         <span
           className="flex size-11 items-center justify-center rounded-xl text-xl"
@@ -359,9 +359,9 @@ function ShareableCourtCard({
             transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
             className="overflow-hidden"
           >
-            <div className="border-t border-[var(--border-subtle)] px-5 py-4">
+            <div className="border-t border-(--border-subtle) px-5 py-4">
               {/* mode toggle — the two booking choices */}
-              <div className="mb-4 inline-flex rounded-xl border border-[var(--border-subtle)] bg-surface p-1">
+              <div className="mb-4 inline-flex rounded-xl border border-(--border-subtle) bg-surface p-1">
                 <ModeTab active={mode === "whole"} onClick={() => setMode("whole")} icon="maximize" label="Entire court" />
                 <ModeTab active={mode === "section"} onClick={() => setMode("section")} icon="grid-2x2" label="By section" />
               </div>
@@ -372,7 +372,7 @@ function ShareableCourtCard({
 
                   {mode === "whole" ? (
                     <div className="flex">
-                      <div className={cn("flex shrink-0 flex-col justify-center gap-0.5 border-r border-[var(--border-subtle)] px-4 py-2.5", LABEL)}>
+                      <div className={cn("flex shrink-0 flex-col justify-center gap-0.5 border-r border-(--border-subtle) px-4 py-2.5", LABEL)}>
                         <span className="text-sm font-semibold text-foreground">Entire court</span>
                         <span className="text-[11px] text-ink-tertiary">{formatCurrency(court.hourlyRate)}/hr · books all sections</span>
                       </div>
@@ -388,8 +388,8 @@ function ShareableCourtCard({
                     sections.map((section, i) => {
                       const accent = sectionColor(i);
                       return (
-                        <div key={section.id} className="flex border-t border-[var(--border-subtle)] first:border-0">
-                          <div className={cn("flex shrink-0 items-center gap-2.5 border-r border-[var(--border-subtle)] px-4 py-2.5", LABEL)}>
+                        <div key={section.id} className="flex border-t border-(--border-subtle) first:border-0">
+                          <div className={cn("flex shrink-0 items-center gap-2.5 border-r border-(--border-subtle) px-4 py-2.5", LABEL)}>
                             <span className="flex size-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold" style={{ background: `color-mix(in oklab, ${accent} 18%, transparent)`, color: accent }}>
                               {section.shortLabel}
                             </span>
@@ -427,7 +427,7 @@ function ModeTab({ active, onClick, icon, label }: { active: boolean; onClick: (
       aria-pressed={active}
       className={cn(
         "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-all",
-        active ? "bg-grad-brand text-white shadow-[var(--glow-brand)]" : "text-ink-secondary hover:text-foreground",
+        active ? "bg-grad-brand text-white shadow-glow-brand" : "text-ink-secondary hover:text-foreground",
       )}
     >
       <Icon name={icon} className="size-4" />

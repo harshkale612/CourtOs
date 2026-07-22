@@ -102,7 +102,7 @@ export default function PaymentsPage() {
             <Skeleton className="h-16 w-full rounded-2xl" />
           ) : (
             (methods ?? []).map((m) => (
-              <div key={m.id} className="flex items-center gap-4 rounded-2xl border border-[var(--border-subtle)] bg-surface p-4">
+              <div key={m.id} className="flex items-center gap-4 rounded-2xl border border-(--border-subtle) bg-surface p-4">
                 <span className="flex h-9 w-12 items-center justify-center rounded-md text-xs font-bold uppercase text-white" style={{ background: BRAND_COLOR[m.brand] }}>
                   {m.brand.slice(0, 4)}
                 </span>

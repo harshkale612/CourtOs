@@ -18,7 +18,7 @@ export const DropdownMenuContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        "z-[1500] min-w-[12rem] overflow-hidden rounded-xl border border-[var(--border-default)] bg-raised/95 p-1.5 text-foreground shadow-[var(--sh-3)] backdrop-blur-xl",
+        "z-1500 min-w-[12rem] overflow-hidden rounded-xl border border-(--border-default) bg-raised/95 p-1.5 text-foreground shadow-sh-3 backdrop-blur-xl",
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
         className,
       )}
@@ -35,7 +35,7 @@ export const DropdownMenuItem = React.forwardRef<
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-ink-secondary outline-none transition-colors duration-150 focus:bg-white/[0.06] focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:size-4",
+      "relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-ink-secondary outline-none transition-colors duration-150 focus:bg-fill-4 focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:size-4",
       inset && "pl-8",
       className,
     )}
@@ -62,7 +62,7 @@ export const DropdownMenuSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DropdownMenuPrimitive.Separator
     ref={ref}
-    className={cn("-mx-1.5 my-1.5 h-px bg-[var(--border-subtle)]", className)}
+    className={cn("-mx-1.5 my-1.5 h-px bg-(--border-subtle)", className)}
     {...props}
   />
 ));
@@ -76,7 +76,7 @@ export const DropdownMenuCheckboxItem = React.forwardRef<
     ref={ref}
     checked={checked}
     className={cn(
-      "relative flex cursor-pointer select-none items-center rounded-lg py-2 pl-8 pr-2.5 text-sm text-ink-secondary outline-none transition-colors focus:bg-white/[0.06] focus:text-foreground",
+      "relative flex cursor-pointer select-none items-center rounded-lg py-2 pl-8 pr-2.5 text-sm text-ink-secondary outline-none transition-colors focus:bg-fill-4 focus:text-foreground",
       className,
     )}
     {...props}

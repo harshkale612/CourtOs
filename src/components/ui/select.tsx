@@ -16,7 +16,7 @@ export const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-11 w-full items-center justify-between gap-2 rounded-md border border-[var(--border-default)] bg-surface px-3.5 text-sm text-foreground shadow-[var(--sh-1)] transition-colors duration-200 focus:border-[var(--border-glow)] focus:outline-none focus:ring-2 focus:ring-brand/40 disabled:cursor-not-allowed disabled:opacity-50 data-[placeholder]:text-ink-tertiary [&>span]:truncate",
+      "flex h-11 w-full items-center justify-between gap-2 rounded-md border border-(--border-default) bg-surface px-3.5 text-sm text-foreground shadow-sh-1 transition-colors duration-200 focus:border-(--border-glow) focus:outline-none focus:ring-2 focus:ring-brand/40 disabled:cursor-not-allowed disabled:opacity-50 data-[placeholder]:text-ink-tertiary [&>span]:truncate",
       className,
     )}
     {...props}
@@ -38,7 +38,7 @@ export const SelectContent = React.forwardRef<
       ref={ref}
       position={position}
       className={cn(
-        "relative z-[1500] max-h-72 min-w-[8rem] overflow-hidden rounded-xl border border-[var(--border-default)] bg-raised/95 text-foreground shadow-[var(--sh-3)] backdrop-blur-xl",
+        "relative z-1500 max-h-72 min-w-[8rem] overflow-hidden rounded-xl border border-(--border-default) bg-raised/95 text-foreground shadow-sh-3 backdrop-blur-xl",
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
         position === "popper" && "data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1",
         className,
@@ -46,7 +46,7 @@ export const SelectContent = React.forwardRef<
       {...props}
     >
       <SelectPrimitive.Viewport
-        className={cn("p-1.5", position === "popper" && "w-full min-w-[var(--radix-select-trigger-width)]")}
+        className={cn("p-1.5", position === "popper" && "w-full min-w-(--radix-select-trigger-width)")}
       >
         {children}
       </SelectPrimitive.Viewport>
@@ -62,7 +62,7 @@ export const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-8 pr-2.5 text-sm text-ink-secondary outline-none transition-colors focus:bg-white/[0.06] focus:text-foreground data-[state=checked]:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-8 pr-2.5 text-sm text-ink-secondary outline-none transition-colors focus:bg-fill-4 focus:text-foreground data-[state=checked]:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className,
     )}
     {...props}

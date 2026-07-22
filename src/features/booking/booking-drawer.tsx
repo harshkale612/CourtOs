@@ -114,7 +114,7 @@ export function BookingDrawer({
           <div className="flex-1 space-y-6 overflow-y-auto px-6 pb-4">
             {/* summary card */}
             <div
-              className="relative overflow-hidden rounded-2xl border border-[var(--border-subtle)] bg-surface p-5"
+              className="relative overflow-hidden rounded-2xl border border-(--border-subtle) bg-surface p-5"
               style={{ boxShadow: `inset 0 0 0 1px color-mix(in oklab, ${accent} 25%, transparent)` }}
             >
               <div className="absolute -right-8 -top-8 size-24 rounded-full opacity-30 blur-2xl" style={{ background: accent }} />
@@ -169,7 +169,7 @@ export function BookingDrawer({
                   {userName} (you)
                 </span>
                 {guests.map((g, i) => (
-                  <span key={i} className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.06] px-3 py-1 text-xs text-foreground">
+                  <span key={i} className="inline-flex items-center gap-1.5 rounded-full bg-fill-4 px-3 py-1 text-xs text-foreground">
                     {g}
                     <button onClick={() => setGuests((arr) => arr.filter((_, idx) => idx !== i))} aria-label="Remove guest">
                       <Icon name="x" className="size-3 text-ink-tertiary hover:text-danger" />
@@ -189,7 +189,7 @@ export function BookingDrawer({
 
         {/* footer */}
         {court && slot && (
-          <div className="border-t border-[var(--border-subtle)] p-6">
+          <div className="border-t border-(--border-subtle) p-6">
             <div className="mb-4 flex items-center justify-between">
               <span className="text-sm text-ink-secondary">Total · {bookingLabel}</span>
               <span className="tnum text-2xl font-bold tracking-tight">{formatCurrency(slot.price)}<span className="text-sm font-normal text-ink-tertiary">/hr</span></span>

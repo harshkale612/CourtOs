@@ -8,7 +8,7 @@ import { FAQS } from "./content";
 export function Faq() {
   const [open, setOpen] = useState<number | null>(0);
   return (
-    <div className="mx-auto max-w-3xl divide-y divide-[var(--border-subtle)] rounded-2xl border border-[var(--border-subtle)] bg-raised">
+    <div className="mx-auto max-w-3xl divide-y divide-(--border-subtle) rounded-2xl border border-(--border-subtle) bg-raised">
       {FAQS.map((faq, i) => {
         const isOpen = open === i;
         return (
@@ -29,7 +29,7 @@ export function Faq() {
             </button>
             <div
               className={cn(
-                "grid overflow-hidden px-6 transition-all duration-300 ease-[var(--e-out)]",
+                "grid overflow-hidden px-6 transition-all duration-300 ease-(--e-out)",
                 isOpen ? "grid-rows-[1fr] pb-5 opacity-100" : "grid-rows-[0fr] opacity-0",
               )}
             >

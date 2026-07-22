@@ -48,7 +48,7 @@ export default function NotificationsPage() {
               <div
                 className={cn(
                   "flex items-start gap-4 rounded-2xl border p-4 transition-colors",
-                  n.read ? "border-[var(--border-subtle)] bg-raised" : "border-[var(--border-default)] bg-grad-brand-soft",
+                  n.read ? "border-(--border-subtle) bg-raised" : "border-(--border-default) bg-grad-brand-soft",
                 )}
               >
                 <span

@@ -100,13 +100,13 @@ export function CommandPalette({ basePath = "/app" }: { basePath?: string }) {
   return (
     <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-[1300] bg-[var(--bg-overlay)] backdrop-blur-[var(--blur-overlay)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <DialogPrimitive.Overlay className="fixed inset-0 z-1300 bg-(--bg-overlay) backdrop-blur-(--blur-overlay) data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <DialogPrimitive.Content
           onKeyDown={onKeyDown}
-          className="fixed left-1/2 top-[12%] z-[1300] w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 overflow-hidden rounded-2xl border border-[var(--border-default)] bg-raised/95 shadow-[var(--sh-4)] backdrop-blur-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+          className="fixed left-1/2 top-[12%] z-1300 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 overflow-hidden rounded-2xl border border-(--border-default) bg-raised/95 shadow-sh-4 backdrop-blur-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
         >
           <DialogPrimitive.Title className="sr-only">Command palette</DialogPrimitive.Title>
-          <div className="flex items-center gap-3 border-b border-[var(--border-subtle)] px-4">
+          <div className="flex items-center gap-3 border-b border-(--border-subtle) px-4">
             <Icon name="search" className="size-5 text-ink-tertiary" />
             <input
               autoFocus
@@ -115,7 +115,7 @@ export function CommandPalette({ basePath = "/app" }: { basePath?: string }) {
               placeholder="Search or jump to…"
               className="h-14 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-ink-tertiary"
             />
-            <kbd className="rounded border border-[var(--border-default)] bg-white/5 px-1.5 py-0.5 text-[10px] text-ink-tertiary">ESC</kbd>
+            <kbd className="rounded border border-(--border-default) bg-fill-4 px-1.5 py-0.5 text-[10px] text-ink-tertiary">ESC</kbd>
           </div>
           <div className="max-h-80 overflow-y-auto p-2">
             {filtered.length === 0 ? (

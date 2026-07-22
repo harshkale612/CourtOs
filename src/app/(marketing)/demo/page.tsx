@@ -22,7 +22,7 @@ export default function DemoPage() {
       <GlowBlob color="var(--accent-blue)" size={500} opacity={0.2} className="-left-20 top-10" />
       <div className="mx-auto grid max-w-6xl items-start gap-12 lg:grid-cols-2 lg:gap-20">
         <div>
-          <span className="inline-flex items-center gap-2 rounded-full border border-[var(--border-default)] bg-white/[0.03] px-3 py-1 text-xs font-semibold uppercase tracking-wider text-ink-secondary">
+          <span className="inline-flex items-center gap-2 rounded-full border border-(--border-default) bg-fill-2 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-ink-secondary">
             <span className="size-1.5 rounded-full bg-grad-brand" /> Book a demo
           </span>
           <h1 className="mt-5 text-balance text-4xl font-bold tracking-tight sm:text-5xl">

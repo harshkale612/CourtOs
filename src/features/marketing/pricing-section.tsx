@@ -32,7 +32,7 @@ export function PricingSection() {
           onClick={() => setAnnual((v) => !v)}
           className={cn(
             "relative h-7 w-12 rounded-full border border-transparent transition-colors",
-            annual ? "bg-grad-brand" : "bg-white/10",
+            annual ? "bg-grad-brand" : "bg-fill-5",
           )}
           aria-label="Toggle annual billing"
         >
@@ -69,12 +69,12 @@ export function PricingSection() {
                 className={cn(
                   "relative flex h-full flex-col rounded-3xl p-7 transition-all duration-300",
                   popular
-                    ? "glow-border bg-raised shadow-[var(--glow-brand)]"
-                    : "border border-[var(--border-subtle)] bg-raised hover:border-[var(--border-strong)]",
+                    ? "glow-border bg-raised shadow-glow-brand"
+                    : "border border-(--border-subtle) bg-raised hover:border-(--border-strong)",
                 )}
               >
                 {popular && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-grad-brand px-3 py-1 text-xs font-semibold text-white shadow-[var(--glow-brand)]">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-grad-brand px-3 py-1 text-xs font-semibold text-white shadow-glow-brand">
                     Most popular
                   </span>
                 )}

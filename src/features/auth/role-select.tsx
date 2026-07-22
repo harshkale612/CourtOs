@@ -33,13 +33,13 @@ export function RoleSelect({ value, onChange }: { value: Role; onChange: (role: 
               "flex items-center gap-3 rounded-xl border p-3 text-left transition-all duration-200",
               active
                 ? "border-transparent bg-grad-brand-soft ring-2 ring-brand"
-                : "border-[var(--border-default)] bg-surface hover:border-[var(--border-strong)]",
+                : "border-(--border-default) bg-surface hover:border-(--border-strong)",
             )}
           >
             <span
               className={cn(
                 "flex size-9 shrink-0 items-center justify-center rounded-lg transition-colors",
-                active ? "bg-grad-brand text-white" : "bg-white/[0.05] text-ink-secondary",
+                active ? "bg-grad-brand text-white" : "bg-fill-4 text-ink-secondary",
               )}
             >
               <Icon name={opt.icon} className="size-4" />
@@ -51,7 +51,7 @@ export function RoleSelect({ value, onChange }: { value: Role; onChange: (role: 
             <span
               className={cn(
                 "flex size-5 items-center justify-center rounded-full border transition-colors",
-                active ? "border-brand bg-brand text-white" : "border-[var(--border-strong)]",
+                active ? "border-brand bg-brand text-white" : "border-(--border-strong)",
               )}
             >
               {active && <Icon name="check" className="size-3" />}

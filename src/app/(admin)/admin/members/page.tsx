@@ -127,7 +127,7 @@ function MemberDrawer({ member, onClose }: { member: User | null; onClose: () =>
 
 function Stat({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-[var(--border-subtle)] bg-surface p-3">
+    <div className="rounded-xl border border-(--border-subtle) bg-surface p-3">
       <p className="text-xs text-ink-tertiary">{label}</p>
       <div className="mt-1 text-sm font-medium capitalize text-foreground">{value}</div>
     </div>

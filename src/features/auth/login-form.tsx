@@ -83,9 +83,9 @@ export function LoginForm() {
       </form>
 
       <div className="flex items-center gap-3">
-        <span className="h-px flex-1 bg-[var(--border-subtle)]" />
+        <span className="h-px flex-1 bg-(--border-subtle)" />
         <span className="text-xs text-ink-tertiary">or explore a demo</span>
-        <span className="h-px flex-1 bg-[var(--border-subtle)]" />
+        <span className="h-px flex-1 bg-(--border-subtle)" />
       </div>
 
       <div className="grid grid-cols-2 gap-3">

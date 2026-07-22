@@ -22,7 +22,8 @@ export function GlowBlob({
       style={{
         width: size,
         height: size,
-        opacity,
+        // Atmosphere is dimmed in light mode via --atmo-strength (dark=1, light=0.5).
+        opacity: `calc(${opacity} * var(--atmo-strength, 1))`,
         background: `radial-gradient(circle at center, ${color}, transparent 70%)`,
       }}
     />

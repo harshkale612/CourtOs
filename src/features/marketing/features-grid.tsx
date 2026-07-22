@@ -7,7 +7,7 @@ export function FeaturesGrid() {
     <StaggerContainer className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {FEATURES.map((feature) => (
         <StaggerItem key={feature.title}>
-          <div className="group relative h-full overflow-hidden rounded-2xl border border-[var(--border-subtle)] bg-raised p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[var(--border-strong)] hover:shadow-[var(--sh-3)]">
+          <div className="group relative h-full overflow-hidden rounded-2xl border border-(--border-subtle) bg-raised p-6 transition-all duration-300 hover:-translate-y-1 hover:border-(--border-strong) hover:shadow-sh-3">
             {/* hover glow */}
             <div
               className="pointer-events-none absolute -right-12 -top-12 size-32 rounded-full opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-60"

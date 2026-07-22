@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils/cn";
 import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { ThemeToggle } from "@/components/shell/theme-toggle";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 export function MarketingNav() {
@@ -21,12 +22,12 @@ export function MarketingNav() {
   }, []);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-[1100] flex justify-center px-4 pt-3">
+    <header className="fixed inset-x-0 top-0 z-1100 flex justify-center px-4 pt-3">
       <nav
         className={cn(
           "flex w-full max-w-6xl items-center justify-between gap-4 rounded-2xl px-4 py-2.5 transition-all duration-300",
           scrolled
-            ? "glass shadow-[var(--sh-3)]"
+            ? "glass shadow-sh-3"
             : "border border-transparent bg-transparent",
         )}
       >
@@ -37,7 +38,7 @@ export function MarketingNav() {
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-ink-secondary transition-colors hover:bg-white/[0.05] hover:text-foreground"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-ink-secondary transition-colors hover:bg-fill-4 hover:text-foreground"
             >
               {item.label}
             </Link>
@@ -45,6 +46,7 @@ export function MarketingNav() {
         </div>
 
         <div className="hidden items-center gap-2 md:flex">
+          <ThemeToggle />
           <Button variant="ghost" size="sm" asChild>
             <Link href="/login">Sign in</Link>
           </Button>
@@ -72,7 +74,7 @@ export function MarketingNav() {
                     key={item.href}
                     href={item.href}
                     onClick={() => setOpen(false)}
-                    className="rounded-lg px-3 py-2.5 text-sm font-medium text-ink-secondary transition-colors hover:bg-white/[0.05] hover:text-foreground"
+                    className="rounded-lg px-3 py-2.5 text-sm font-medium text-ink-secondary transition-colors hover:bg-fill-4 hover:text-foreground"
                   >
                     {item.label}
                   </Link>

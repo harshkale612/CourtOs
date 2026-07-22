@@ -18,11 +18,13 @@ export const CHART_SERIES = [
   CHART_COLORS.cyan,
 ];
 
+/* Theme-aware via CSS vars — Recharts renders these straight into SVG,
+   so charts re-theme automatically on light/dark switch. */
 export const AXIS_PROPS = {
-  stroke: "rgba(148,163,184,0.5)",
+  stroke: "var(--chart-axis)",
   fontSize: 12,
   tickLine: false,
   axisLine: false,
 } as const;
 
-export const GRID_STROKE = "rgba(255,255,255,0.06)";
+export const GRID_STROKE = "var(--chart-grid)";

@@ -77,7 +77,7 @@ export function SportsStep({
               "flex flex-col items-center gap-2 rounded-2xl border p-5 transition-all duration-200",
               active
                 ? "border-transparent ring-2"
-                : "border-[var(--border-default)] bg-surface hover:border-[var(--border-strong)]",
+                : "border-(--border-default) bg-surface hover:border-(--border-strong)",
             )}
             style={
               active
@@ -122,7 +122,7 @@ export function CourtsStep({
               key={sport}
               type="button"
               onClick={() => addForSport(sport)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-default)] bg-surface px-3 py-1.5 text-sm text-ink-secondary transition-colors hover:border-[var(--border-strong)] hover:text-foreground"
+              className="inline-flex items-center gap-1.5 rounded-full border border-(--border-default) bg-surface px-3 py-1.5 text-sm text-ink-secondary transition-colors hover:border-(--border-strong) hover:text-foreground"
             >
               <Icon name="plus" className="size-3.5" /> {s.emoji} {s.label}
             </button>
@@ -132,7 +132,7 @@ export function CourtsStep({
 
       <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
         {state.courts.length === 0 && (
-          <p className="rounded-xl border border-dashed border-[var(--border-default)] p-6 text-center text-sm text-ink-tertiary">
+          <p className="rounded-xl border border-dashed border-(--border-default) p-6 text-center text-sm text-ink-tertiary">
             Tap a sport above to add courts.
           </p>
         )}
@@ -141,7 +141,7 @@ export function CourtsStep({
           return (
             <div
               key={court.id}
-              className="flex items-center gap-3 rounded-xl border border-[var(--border-subtle)] bg-surface px-3.5 py-2.5"
+              className="flex items-center gap-3 rounded-xl border border-(--border-subtle) bg-surface px-3.5 py-2.5"
             >
               <span
                 className="flex size-8 items-center justify-center rounded-lg text-sm"
@@ -241,7 +241,7 @@ export function SkillStep({
               "flex items-center gap-3 rounded-xl border p-4 text-left transition-all duration-200",
               active
                 ? "border-transparent bg-grad-brand-soft ring-2 ring-brand"
-                : "border-[var(--border-default)] bg-surface hover:border-[var(--border-strong)]",
+                : "border-(--border-default) bg-surface hover:border-(--border-strong)",
             )}
           >
             <span className="flex-1">

@@ -28,7 +28,7 @@ export function ReservationCard({
   const canModify = reservation.status === "confirmed" || reservation.status === "pending";
 
   return (
-    <div className="flex items-center gap-4 rounded-2xl border border-[var(--border-subtle)] bg-raised p-4 transition-colors hover:border-[var(--border-strong)]">
+    <div className="flex items-center gap-4 rounded-2xl border border-(--border-subtle) bg-raised p-4 transition-colors hover:border-(--border-strong)">
       <div
         className="flex size-12 shrink-0 items-center justify-center rounded-xl text-xl"
         style={{ background: `color-mix(in oklab, ${sport.color} 16%, transparent)` }}

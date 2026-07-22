@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { NavItem } from "./nav-item";
 import { UserMenu } from "./user-menu";
+import { ThemeToggle } from "./theme-toggle";
 
 interface TopbarProps {
   title?: string;
@@ -22,7 +23,7 @@ export function Topbar({ title, sections, basePath }: TopbarProps) {
   const setCommandOpen = useUiStore((s) => s.setCommandOpen);
 
   return (
-    <header className="glass sticky top-0 z-[1100] flex h-16 items-center gap-3 px-4 sm:px-6">
+    <header className="glass sticky top-0 z-1100 flex h-16 items-center gap-3 px-4 sm:px-6">
       {/* Mobile: drawer trigger + logo */}
       <div className="flex items-center gap-2 lg:hidden">
         <Sheet open={open} onOpenChange={setOpen}>
@@ -59,20 +60,22 @@ export function Topbar({ title, sections, basePath }: TopbarProps) {
       <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
         <button
           onClick={() => setCommandOpen(true)}
-          className="hidden h-10 items-center gap-2 rounded-lg border border-[var(--border-default)] bg-surface px-3 text-sm text-ink-tertiary transition-colors hover:border-[var(--border-strong)] sm:flex"
+          className="hidden h-10 items-center gap-2 rounded-lg border border-(--border-default) bg-surface px-3 text-sm text-ink-tertiary transition-colors hover:border-(--border-strong) sm:flex"
         >
           <Icon name="search" className="size-4" />
           <span>Search…</span>
-          <kbd className="ml-2 rounded border border-[var(--border-default)] bg-white/5 px-1.5 text-[10px] font-medium">
+          <kbd className="ml-2 rounded border border-(--border-default) bg-fill-4 px-1.5 text-[10px] font-medium">
             ⌘K
           </kbd>
         </button>
+
+        <ThemeToggle />
 
         {basePath === "/app" && (
           <Button variant="ghost" size="icon" asChild aria-label="Notifications">
             <Link href="/app/notifications" className="relative">
               <Icon name="bell" className="size-5" />
-              <span className="absolute right-2 top-2 size-2 rounded-full bg-danger ring-2 ring-[var(--bg-canvas)]" />
+              <span className="absolute right-2 top-2 size-2 rounded-full bg-danger ring-2 ring-canvas" />
             </Link>
           </Button>
         )}

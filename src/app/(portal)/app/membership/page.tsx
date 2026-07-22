@@ -47,7 +47,7 @@ export default function MembershipPage() {
               </h2>
               <p className="mt-1 text-ink-secondary">{current.description}</p>
 
-              <div className="mt-5 flex items-center justify-between rounded-2xl border border-[var(--border-subtle)] bg-surface p-4">
+              <div className="mt-5 flex items-center justify-between rounded-2xl border border-(--border-subtle) bg-surface p-4">
                 <div className="flex items-center gap-3">
                   <Icon name="calendar-check" className="size-5 text-brand" />
                   <div>
@@ -69,7 +69,7 @@ export default function MembershipPage() {
                     <span className="text-ink-secondary">Bookings used</span>
                     <span className="tnum font-medium text-foreground">{used} / {current.includedBookings}</span>
                   </div>
-                  <div className="h-2.5 overflow-hidden rounded-full bg-white/[0.06]">
+                  <div className="h-2.5 overflow-hidden rounded-full bg-fill-4">
                     <div className="h-full rounded-full bg-grad-brand" style={{ width: `${Math.min(100, (used / Math.max(1, current.includedBookings)) * 100)}%` }} />
                   </div>
                 </div>
@@ -99,7 +99,7 @@ export default function MembershipPage() {
                 key={plan.id}
                 className={cn(
                   "flex flex-col rounded-3xl border p-6",
-                  isCurrent ? "border-brand bg-grad-brand-soft" : "border-[var(--border-subtle)] bg-raised",
+                  isCurrent ? "border-brand bg-grad-brand-soft" : "border-(--border-subtle) bg-raised",
                 )}
               >
                 <div className="flex items-center justify-between">

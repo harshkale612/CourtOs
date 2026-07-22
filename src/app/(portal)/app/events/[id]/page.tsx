@@ -48,9 +48,9 @@ export default function EventDetailPage() {
 
       <div className="grid gap-8 lg:grid-cols-[1.6fr_1fr]">
         <div className="space-y-6">
-          <div className="relative aspect-[16/9] overflow-hidden rounded-3xl border border-[var(--border-subtle)]">
+          <div className="relative aspect-16/9 overflow-hidden rounded-3xl border border-(--border-subtle)">
             {event.coverUrl && <Image src={event.coverUrl} alt={event.title} fill sizes="(max-width:1024px) 100vw, 60vw" className="object-cover" priority />}
-            <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-canvas)]/80 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-canvas/80 to-transparent" />
             <div className="absolute bottom-4 left-4 flex gap-2">
               <Badge tone="neutral" className="bg-black/40 backdrop-blur">{TYPE_LABEL[event.type]}</Badge>
               <SportBadge sport={event.sport} className="bg-black/40 backdrop-blur" />
@@ -65,7 +65,7 @@ export default function EventDetailPage() {
 
         {/* booking sidebar */}
         <div className="lg:sticky lg:top-24 lg:self-start">
-          <div className="space-y-5 rounded-3xl border border-[var(--border-subtle)] bg-raised p-6">
+          <div className="space-y-5 rounded-3xl border border-(--border-subtle) bg-raised p-6">
             <div className="flex items-baseline justify-between">
               <span className="tnum text-3xl font-bold tracking-tight">
                 {event.price === 0 ? "Free" : formatCurrency(event.price)}
@@ -88,7 +88,7 @@ export default function EventDetailPage() {
                 <span>{event.registeredCount} registered</span>
                 <span>{event.capacity} capacity</span>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-white/[0.06]">
+              <div className="h-2 overflow-hidden rounded-full bg-fill-4">
                 <div className="h-full rounded-full" style={{ width: `${pct}%`, background: sport.color }} />
               </div>
             </div>

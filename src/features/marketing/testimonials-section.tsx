@@ -6,7 +6,7 @@ import { StaggerContainer, StaggerItem } from "@/components/motion/stagger";
 
 function TestimonialCard({ t }: { t: Testimonial }) {
   return (
-    <figure className="flex h-full break-inside-avoid flex-col gap-4 rounded-2xl border border-[var(--border-subtle)] bg-raised p-6 transition-colors hover:border-[var(--border-strong)]">
+    <figure className="flex h-full break-inside-avoid flex-col gap-4 rounded-2xl border border-(--border-subtle) bg-raised p-6 transition-colors hover:border-(--border-strong)">
       <div className="flex gap-0.5">
         {Array.from({ length: t.rating }).map((_, i) => (
           <Icon key={i} name="star" className="size-4 fill-warning text-warning" />
@@ -21,7 +21,7 @@ function TestimonialCard({ t }: { t: Testimonial }) {
           alt={t.name}
           width={40}
           height={40}
-          className="size-10 rounded-full border border-[var(--border-default)]"
+          className="size-10 rounded-full border border-(--border-default)"
           unoptimized
         />
         <div>

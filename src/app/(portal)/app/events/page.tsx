@@ -38,8 +38,8 @@ export default function EventsPage() {
             className={cn(
               "shrink-0 rounded-xl border px-3.5 py-2 text-sm font-medium transition-all duration-200",
               filter === chip.id
-                ? "border-transparent bg-grad-brand text-white shadow-[var(--glow-brand)]"
-                : "border-[var(--border-default)] bg-surface text-ink-secondary hover:border-[var(--border-strong)] hover:text-foreground",
+                ? "border-transparent bg-grad-brand text-white shadow-glow-brand"
+                : "border-(--border-default) bg-surface text-ink-secondary hover:border-(--border-strong) hover:text-foreground",
             )}
           >
             {chip.label}

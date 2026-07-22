@@ -9,7 +9,7 @@ export function ChartTooltip({
 }: TooltipProps<number, string> & { formatter?: (value: number, name: string) => string }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-xl border border-[var(--border-default)] bg-raised/95 px-3 py-2 shadow-[var(--sh-3)] backdrop-blur-xl">
+    <div className="rounded-xl border border-(--border-default) bg-raised/95 px-3 py-2 shadow-sh-3 backdrop-blur-xl">
       {label != null && (
         <p className="mb-1 text-xs font-medium text-ink-tertiary">{String(label)}</p>
       )}

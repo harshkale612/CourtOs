@@ -13,7 +13,7 @@ export const TONE_CLASSES: Record<StatusTone, string> = {
   warning: "bg-orange/12 text-orange border-orange/20",
   danger: "bg-danger/12 text-danger border-danger/20",
   info: "bg-cyan/12 text-cyan border-cyan/20",
-  neutral: "bg-white/8 text-ink-secondary border-white/10",
+  neutral: "bg-fill-5 text-ink-secondary border-(--border-default)",
 };
 
 export const BOOKING_STATUS: Record<BookingStatus, StatusConfig> = {

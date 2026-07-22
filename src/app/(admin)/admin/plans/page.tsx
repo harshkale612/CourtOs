@@ -43,7 +43,7 @@ export default function PlansPage() {
                   </li>
                 ))}
               </ul>
-              <div className="mt-6 flex gap-2 border-t border-[var(--border-subtle)] pt-4">
+              <div className="mt-6 flex gap-2 border-t border-(--border-subtle) pt-4">
                 <Button variant="secondary" size="sm" className="flex-1" onClick={() => toast.success("Editing " + plan.name)}>Edit</Button>
                 <Button variant="ghost" size="icon"><Icon name="ellipsis" className="size-4" /></Button>
               </div>

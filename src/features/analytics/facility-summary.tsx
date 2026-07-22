@@ -35,7 +35,7 @@ export function FacilitySummary({ className }: { className?: string }) {
               <p className="text-sm text-ink-secondary">Physical courts</p>
             </div>
           </div>
-          <div className="mt-4 flex h-2 overflow-hidden rounded-full bg-white/[0.06]">
+          <div className="mt-4 flex h-2 overflow-hidden rounded-full bg-fill-4">
             <div className="h-full" style={{ width: `${wholePct}%`, background: COURT_TYPE.whole.color }} />
             <div className="h-full flex-1" style={{ background: COURT_TYPE.shareable.color }} />
           </div>
@@ -46,14 +46,14 @@ export function FacilitySummary({ className }: { className?: string }) {
         </div>
 
         {/* sections */}
-        <div className="sm:border-l sm:border-[var(--border-subtle)] sm:pl-6">
+        <div className="sm:border-l sm:border-(--border-subtle) sm:pl-6">
           <div className="flex items-end justify-between">
             <div>
               <p className="text-3xl font-bold tracking-tight"><Counter value={data.totalSections} /></p>
               <p className="text-sm text-ink-secondary">Total sections</p>
             </div>
           </div>
-          <div className="mt-4 flex h-2 overflow-hidden rounded-full bg-white/[0.06]">
+          <div className="mt-4 flex h-2 overflow-hidden rounded-full bg-fill-4">
             <div className="h-full" style={{ width: `${availPct}%`, background: "var(--success)" }} />
             <div className="h-full flex-1" style={{ background: "var(--danger)" }} />
           </div>

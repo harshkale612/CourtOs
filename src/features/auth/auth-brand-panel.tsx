@@ -22,7 +22,7 @@ export function AuthBrandPanel() {
           Join 1,200+ clubs running booking, memberships, events, and analytics on {siteConfig.name}.
         </p>
 
-        <figure className="mt-10 rounded-2xl border border-[var(--border-default)] bg-white/[0.03] p-5 backdrop-blur">
+        <figure className="mt-10 rounded-2xl border border-(--border-default) bg-fill-2 p-5 backdrop-blur">
           <div className="flex gap-0.5">
             {Array.from({ length: 5 }).map((_, i) => (
               <Icon key={i} name="star" className="size-4 fill-warning text-warning" />
@@ -43,7 +43,7 @@ export function AuthBrandPanel() {
           {SPORT_LIST.map((s) => (
             <span
               key={s.id}
-              className="flex size-7 items-center justify-center rounded-full border-2 border-[var(--bg-canvas)] text-xs"
+              className="flex size-7 items-center justify-center rounded-full border-2 border-canvas text-xs"
               style={{ background: `color-mix(in oklab, ${s.color} 22%, var(--bg-raised))` }}
             >
               {s.emoji}

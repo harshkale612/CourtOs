@@ -22,8 +22,8 @@ export function DateStrip({ value, onChange }: { value: string; onChange: (iso: 
             className={cn(
               "flex w-16 shrink-0 flex-col items-center gap-0.5 rounded-xl border py-2.5 transition-all duration-200",
               active
-                ? "border-transparent bg-grad-brand text-white shadow-[var(--glow-brand)]"
-                : "border-[var(--border-subtle)] bg-surface text-ink-secondary hover:border-[var(--border-strong)] hover:text-foreground",
+                ? "border-transparent bg-grad-brand text-white shadow-glow-brand"
+                : "border-(--border-subtle) bg-surface text-ink-secondary hover:border-(--border-strong) hover:text-foreground",
             )}
           >
             <span className="text-[11px] font-medium uppercase tracking-wide opacity-80">

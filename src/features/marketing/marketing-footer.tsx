@@ -34,7 +34,7 @@ const COLUMNS = [
 
 export function MarketingFooter() {
   return (
-    <footer className="relative border-t border-[var(--border-subtle)] px-6 py-16">
+    <footer className="relative border-t border-(--border-subtle) px-6 py-16">
       <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[1.5fr_repeat(3,1fr)]">
         <div className="space-y-4">
           <Logo />
