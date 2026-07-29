@@ -37,6 +37,23 @@ export const queryKeys = {
     list: (userId: string) => ["notifications", "list", userId] as const,
     unread: (userId: string) => ["notifications", "unread", userId] as const,
   },
+  pos: {
+    products: ["pos", "products"] as const,
+    product: (id: string) => ["pos", "product", id] as const,
+    lowStock: ["pos", "low-stock"] as const,
+    orders: (dateISO?: string, limit?: number) =>
+      ["pos", "orders", dateISO ?? "all", limit ?? 0] as const,
+    order: (id: string) => ["pos", "order", id] as const,
+    stockAdjustments: (productId?: string) =>
+      ["pos", "stock-adjustments", productId ?? "all"] as const,
+    creditBalance: (userId?: string) => ["pos", "credit", userId ?? "none"] as const,
+    kpis: ["pos", "kpis"] as const,
+    summary: ["pos", "summary"] as const,
+    salesSeries: (days: number) => ["pos", "sales-series", days] as const,
+    bestSellers: (limit: number) => ["pos", "best-sellers", limit] as const,
+    revenueByCategory: ["pos", "revenue-by-category"] as const,
+    inventoryValue: ["pos", "inventory-value"] as const,
+  },
   analytics: {
     kpis: ["analytics", "kpis"] as const,
     facility: ["analytics", "facility"] as const,

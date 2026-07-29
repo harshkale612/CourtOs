@@ -8,6 +8,7 @@ import { membersApi } from "./members";
 import { notificationsApi } from "./notifications";
 import { paymentsApi } from "./payments";
 import { plansApi } from "./plans";
+import { posApi } from "./pos";
 import { reservationsApi } from "./reservations";
 
 export const api = {
@@ -21,6 +22,7 @@ export const api = {
   payments: paymentsApi,
   notifications: notificationsApi,
   analytics: analyticsApi,
+  pos: posApi,
 };
 
 export { ApiError } from "./client";
@@ -36,3 +38,12 @@ export type {
   UtilPoint,
 } from "./analytics";
 export type { CreateReservationInput } from "./reservations";
+export type {
+  PosKpi,
+  SalesSummary,
+  SalesPoint,
+  BestSeller,
+  CategoryRevenue,
+  InventoryValue,
+  CreateOrderInput,
+} from "./pos";

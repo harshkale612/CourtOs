@@ -11,15 +11,24 @@ import type {
   Notification,
   Organization,
   PaymentMethod,
+  PosLineItem,
+  PosOrder,
+  PosPayment,
+  Product,
+  ProductCategory,
   Reservation,
   SkillLevel,
   Sport,
   SportEvent,
+  StockAdjustment,
   Transaction,
   User,
   WaitlistEntry,
 } from "@/types";
 import { SPORT_LIST } from "@/lib/constants/sports";
+import { DEFAULT_TAX_RATE } from "@/lib/constants/pos";
+import { computeTotals, round2 } from "@/lib/utils/pos";
+import { PRODUCT_SPECS } from "./pos-catalog";
 import { addDays, ANCHOR_DATE, atTime, createRng, rngHelpers } from "./prng";
 import { hasConflict } from "./availability";
 import { avatarPortrait, courtImage, eventImage } from "./images";
@@ -464,6 +473,212 @@ export const notifications: Notification[] = [
 ];
 
 /* -------------------------------------------------------------------------- */
+/*  Point of Sale — catalog, orders, stock ledger & club credit               */
+/*  Retail + club services on one order. Every completed sale also writes a    */
+/*  Transaction (type "pos") into the shared ledger so Billing stays unified.  */
+/* -------------------------------------------------------------------------- */
+
+const CATEGORY_SKU_PREFIX: Record<ProductCategory, string> = {
+  beverages: "BEV",
+  snacks: "SNK",
+  equipment: "EQP",
+  apparel: "APP",
+  merch: "MRC",
+  coaching: "COA",
+  passes: "PAS",
+};
+
+function buildProducts(): Product[] {
+  const counters: Record<string, number> = {};
+  return PRODUCT_SPECS.map((s, i) => {
+    const prefix = CATEGORY_SKU_PREFIX[s.category];
+    counters[prefix] = (counters[prefix] ?? 0) + 1;
+    const sku = `${prefix}-${String(counters[prefix]).padStart(3, "0")}`;
+    const track = s.track !== false;
+    const status = s.status ?? (track && s.stock <= 0 ? "out_of_stock" : "active");
+    const barcode = track ? `754${String(100000000 + i * 811731).slice(-9)}` : undefined;
+    return {
+      id: `prod_${i + 1}`,
+      orgId: org.id,
+      name: s.name,
+      description: s.description,
+      category: s.category,
+      sku,
+      barcode,
+      price: s.price,
+      taxRate: s.taxRate ?? DEFAULT_TAX_RATE,
+      cost: s.cost,
+      stock: s.stock,
+      lowStockThreshold: s.low,
+      trackInventory: track,
+      status,
+      emoji: s.emoji,
+      sport: s.sport,
+    };
+  });
+}
+export const products = buildProducts();
+
+/** Desk staff who ring sales (POS-only identities). */
+export const POS_CASHIERS = [
+  { id: "staff_jordan", name: "Jordan Blake" },
+  { id: "staff_mia", name: "Mia Fortin" },
+  { id: "staff_devon", name: "Devon Clarke" },
+];
+
+/** Prepaid club-credit balances (CAD), keyed by user id. */
+function buildClubCredit(): Record<string, number> {
+  const out: Record<string, number> = { [currentUser.id]: 75 };
+  for (const m of members) {
+    if (m.id === currentUser.id) continue;
+    if (h.chance(0.3)) out[m.id] = h.pick([15, 20, 25, 40, 50, 75, 100, 150]);
+  }
+  return out;
+}
+export const clubCredit = buildClubCredit();
+
+const CARD_REFS = ["Visa •4242", "Mastercard •5318", "Amex •0005", "Interac Debit"];
+
+function buildPosOrders(): { orders: PosOrder[]; txns: Transaction[] } {
+  const orders: PosOrder[] = [];
+  const txns: Transaction[] = [];
+  let n = 0;
+  let li = 0;
+  const sellable = products.filter(
+    (p) => p.status !== "archived" && (!p.trackInventory || p.stock > 0),
+  );
+  const paidEvents = events.filter((e) => e.price > 0);
+
+  for (let day = -30; day <= 0; day++) {
+    const date = addDays(ANCHOR_DATE, day);
+    const count = day === 0 ? h.int(9, 14) : h.int(1, 4);
+    for (let k = 0; k < count; k++) {
+      const lineItems: PosLineItem[] = [];
+      const numLines = h.int(1, 4);
+      for (let j = 0; j < numLines; j++) {
+        const p = h.pick(sellable);
+        const qty = p.price > 40 ? 1 : h.int(1, 3);
+        const discount = h.chance(0.12) ? h.pick([1, 2, 5]) : 0;
+        lineItems.push({
+          id: `li_${++li}`,
+          kind: "product",
+          refId: p.id,
+          name: p.name,
+          category: p.category,
+          sku: p.sku,
+          emoji: p.emoji,
+          unitPrice: p.price,
+          quantity: qty,
+          taxRate: p.taxRate,
+          discount,
+        });
+      }
+      // ~22% of orders bundle a club service — the "unified transaction" story.
+      if (h.chance(0.22)) {
+        const svc = h.pick(["membership", "booking", "event"] as const);
+        if (svc === "membership") {
+          const plan = h.pick(plans);
+          lineItems.push({ id: `li_${++li}`, kind: "membership", refId: plan.id, name: `${plan.name} Membership`, emoji: "🏅", unitPrice: plan.price, quantity: 1, taxRate: DEFAULT_TAX_RATE, discount: 0 });
+        } else if (svc === "booking") {
+          const court = h.pick(courts);
+          lineItems.push({ id: `li_${++li}`, kind: "booking", refId: court.id, name: `${court.name} · 1 hr`, emoji: "🎾", unitPrice: court.hourlyRate, quantity: 1, taxRate: DEFAULT_TAX_RATE, discount: 0 });
+        } else if (paidEvents.length) {
+          const e = h.pick(paidEvents);
+          lineItems.push({ id: `li_${++li}`, kind: "event", refId: e.id, name: e.title, emoji: "🏆", unitPrice: e.price, quantity: 1, taxRate: DEFAULT_TAX_RATE, discount: 0 });
+        }
+      }
+
+      const totals = computeTotals(lineItems);
+      const member = h.chance(0.55) ? h.pick(members) : undefined;
+
+      // Tender: mostly single, occasional split (card + cash).
+      const payments: PosPayment[] = [];
+      if (h.chance(0.1) && totals.total > 20) {
+        const first = round2(totals.total / 2);
+        const rest = round2(totals.total - first);
+        payments.push({ method: "card", amount: first, reference: h.pick(CARD_REFS) });
+        payments.push({ method: "cash", amount: rest, reference: "Cash", tendered: Math.ceil(rest / 5) * 5 });
+      } else {
+        const method = h.pick(["cash", "card", "card", "club_credit"] as const);
+        if (method === "cash") payments.push({ method: "cash", amount: totals.total, reference: "Cash", tendered: Math.ceil(totals.total / 5) * 5 });
+        else if (method === "card") payments.push({ method: "card", amount: totals.total, reference: h.pick(CARD_REFS) });
+        else payments.push({ method: "club_credit", amount: totals.total, reference: "Club credit" });
+      }
+
+      const cashier = h.pick(POS_CASHIERS);
+      const createdAt = atTime(date, h.int(7, 21), h.pick([0, 15, 30, 45])).toISOString();
+      const refunded = day < -1 && h.chance(0.04);
+      orders.push({
+        id: `pos_${++n}`,
+        orgId: org.id,
+        number: `POS-${1000 + n}`,
+        cashierId: cashier.id,
+        cashierName: cashier.name,
+        customerId: member?.id,
+        customerName: member?.name ?? "Walk-in",
+        lineItems,
+        subtotal: totals.subtotal,
+        discountTotal: totals.discountTotal,
+        tax: totals.tax,
+        total: totals.total,
+        payments,
+        status: refunded ? "refunded" : "completed",
+        createdAt,
+      });
+      txns.push({
+        id: `txn_pos_${n}`,
+        orgId: org.id,
+        userId: member?.id ?? currentUser.id,
+        amount: refunded ? -totals.total : totals.total,
+        type: refunded ? "refund" : "pos",
+        status: refunded ? "refunded" : "paid",
+        method: payments.length > 1 ? "Split payment" : (payments[0].reference ?? "Card"),
+        createdAt,
+      });
+    }
+  }
+
+  orders.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+  return { orders, txns };
+}
+const posBuild = buildPosOrders();
+export const posOrders = posBuild.orders;
+// Fold POS sales into the shared transaction ledger (Billing/Analytics).
+transactions.push(...posBuild.txns);
+
+function buildStockAdjustments(): StockAdjustment[] {
+  const out: StockAdjustment[] = [];
+  let n = 0;
+  const tracked = products.filter((p) => p.trackInventory);
+  for (const p of tracked) {
+    if (h.chance(0.7)) {
+      out.push({
+        id: `adj_${++n}`,
+        productId: p.id,
+        delta: h.pick([12, 24, 24, 36, 48]),
+        reason: "restock",
+        note: "Weekly replenishment",
+        by: h.pick(POS_CASHIERS).name,
+        createdAt: addDays(ANCHOR_DATE, -h.int(4, 21)).toISOString(),
+      });
+    }
+  }
+  for (const p of h.sample(tracked, 3)) {
+    out.push({
+      id: `adj_${++n}`,
+      productId: p.id,
+      delta: -h.int(1, 3),
+      reason: h.pick(["damage", "correction"] as const),
+      note: h.pick(["Damaged in storage", "Cycle-count correction"]),
+      by: h.pick(POS_CASHIERS).name,
+      createdAt: addDays(ANCHOR_DATE, -h.int(1, 10)).toISOString(),
+    });
+  }
+  return out.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+}
+export const stockAdjustments = buildStockAdjustments();
+
+/* -------------------------------------------------------------------------- */
 
 /** The single in-memory mock database. Mutated by mock mutations at runtime. */
 export const db = {
@@ -484,6 +699,10 @@ export const db = {
   invoices,
   transactions,
   notifications,
+  products,
+  posOrders,
+  stockAdjustments,
+  clubCredit,
 };
 
 export type MockDB = typeof db;

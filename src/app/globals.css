@@ -477,6 +477,30 @@
   }
 }
 
+/* ============================================================
+   Print — POS receipt only. The register/checkout stamps
+   `.printing-receipt` on <body> so a Print action outputs just
+   the receipt (works through the dialog portal via visibility).
+   ============================================================ */
+@media print {
+  body.printing-receipt * {
+    visibility: hidden !important;
+  }
+  body.printing-receipt .pos-receipt,
+  body.printing-receipt .pos-receipt * {
+    visibility: visible !important;
+  }
+  body.printing-receipt .pos-receipt {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: 100%;
+    border: none;
+    box-shadow: none;
+  }
+}
+
 /* honor reduced motion globally */
 @media (prefers-reduced-motion: reduce) {
   *,

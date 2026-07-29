@@ -12,6 +12,7 @@ import { CHART_COLORS } from "@/components/charts/chart-theme";
 import { AdminHeader } from "@/features/admin/admin-header";
 import { KpiCards } from "@/features/analytics/kpi-cards";
 import { FacilitySummary } from "@/features/analytics/facility-summary";
+import { PosDashboardSection } from "@/features/pos/pos-dashboard-section";
 import {
   useBookingTypeBreakdown,
   useRevenueByCourt,
@@ -75,6 +76,9 @@ export default function AdminDashboardPage() {
       <KpiCards keys={["revenueToday", "wholeBookings", "sectionBookings", "courtUtil"]} />
 
       <FacilitySummary />
+
+      {/* Point of Sale — retail KPIs, best sellers, low stock */}
+      <PosDashboardSection />
 
       {/* trend + booking-type split */}
       <div className="grid gap-5 lg:grid-cols-3">

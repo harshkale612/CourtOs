@@ -1,4 +1,4 @@
-import type { BookingStatus, PaymentStatus, WaitlistStatus } from "@/types";
+import type { BookingStatus, PaymentStatus, TransactionType, WaitlistStatus } from "@/types";
 
 export type StatusTone = "success" | "warning" | "danger" | "info" | "neutral";
 
@@ -36,4 +36,14 @@ export const WAITLIST_STATUS: Record<WaitlistStatus, StatusConfig> = {
   offered: { label: "Offer sent", tone: "warning" },
   claimed: { label: "Claimed", tone: "success" },
   expired: { label: "Expired", tone: "neutral" },
+};
+
+/** Friendly labels for ledger transaction types (Billing table, exports). */
+export const TRANSACTION_TYPE_LABEL: Record<TransactionType, string> = {
+  booking: "Booking",
+  membership: "Membership",
+  event: "Event",
+  pos: "Retail (POS)",
+  refund: "Refund",
+  other: "Other",
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import { memberName } from "@/lib/mock/lookup";
-import { PAYMENT_STATUS } from "@/lib/constants/statuses";
+import { PAYMENT_STATUS, TRANSACTION_TYPE_LABEL } from "@/lib/constants/statuses";
 import { formatCurrency, formatLongDate } from "@/lib/utils/format";
 import { CHART_COLORS } from "@/components/charts/chart-theme";
 import { useAllTransactions } from "@/features/admin/hooks";
@@ -69,7 +69,7 @@ export default function BillingPage() {
               {txns.slice(0, 14).map((t) => (
                 <TableRow key={t.id}>
                   <TableCell className="font-medium text-foreground">{memberName(t.userId)}</TableCell>
-                  <TableCell className="hidden capitalize sm:table-cell">{t.type}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{TRANSACTION_TYPE_LABEL[t.type]}</TableCell>
                   <TableCell className="hidden md:table-cell">{t.method}</TableCell>
                   <TableCell>{formatLongDate(t.createdAt)}</TableCell>
                   <TableCell><Badge tone={PAYMENT_STATUS[t.status].tone}>{PAYMENT_STATUS[t.status].label}</Badge></TableCell>

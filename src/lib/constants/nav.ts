@@ -42,6 +42,15 @@ export const ADMIN_NAV: NavSection[] = [
     ],
   },
   {
+    title: "Point of Sale",
+    items: [
+      { label: "Register", href: "/admin/pos", icon: "shopping-cart" },
+      { label: "Products", href: "/admin/pos/catalog", icon: "package" },
+      { label: "Inventory", href: "/admin/pos/inventory", icon: "warehouse" },
+      { label: "Sales Reports", href: "/admin/pos/reports", icon: "bar-chart-3" },
+    ],
+  },
+  {
     title: "People",
     items: [
       { label: "Members", href: "/admin/members", icon: "users" },

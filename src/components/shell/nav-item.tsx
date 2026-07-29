@@ -8,9 +8,12 @@ import { Icon } from "@/components/ui/icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 
+// Section index routes match exactly (so a section's own sub-pages don't keep
+// the index item active alongside the deeper item).
+const INDEX_ROUTES = new Set(["/app", "/admin", "/admin/pos"]);
+
 function isActive(pathname: string, href: string) {
-  // exact match for index routes (/app, /admin), prefix match otherwise
-  if (href === "/app" || href === "/admin") return pathname === href;
+  if (INDEX_ROUTES.has(href)) return pathname === href;
   return pathname === href || pathname.startsWith(href + "/");
 }
 

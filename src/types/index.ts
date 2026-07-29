@@ -53,7 +53,13 @@ export type SkillLevel = "beginner" | "intermediate" | "advanced" | "all";
 
 export type BookingChannel = "web" | "mobile" | "admin" | "kiosk";
 
-export type TransactionType = "booking" | "membership" | "event" | "refund" | "other";
+export type TransactionType =
+  | "booking"
+  | "membership"
+  | "event"
+  | "pos"
+  | "refund"
+  | "other";
 
 /* --------------------------------- Branded IDs ---------------------------- */
 // Plain strings at runtime; named for readability in signatures.
@@ -313,4 +319,119 @@ export interface SlotAvailability {
   price: number;
   reservationId?: ID;
   blockedBy?: BlockReason; // why unavailable (for honest UI messaging)
+}
+
+/* --------------------------------- Point of Sale -------------------------- */
+/**
+ * The POS module lets reception staff sell retail goods AND club services
+ * (bookings, memberships, events, coaching, guest passes) on ONE order.
+ * It reads the same courts/plans/events/coaches as the rest of the platform,
+ * and every completed sale writes a `Transaction` (type "pos") into the shared
+ * ledger so Billing & Analytics stay unified.
+ */
+
+/** Retail product families sold at the desk. */
+export type ProductCategory =
+  | "beverages"
+  | "snacks"
+  | "equipment"
+  | "apparel"
+  | "merch"
+  | "coaching"
+  | "passes";
+
+/** Catalog lifecycle. `out_of_stock` is derived but persisted for fast filters. */
+export type ProductStatus = "active" | "archived" | "out_of_stock";
+
+export interface Product {
+  id: ID;
+  orgId: ID;
+  name: string;
+  description?: string;
+  category: ProductCategory;
+  sku: string;
+  barcode?: string;
+  price: number; // CAD, pre-tax unit price
+  taxRate: number; // e.g. 0.13 (Ontario HST). 0 = tax-exempt.
+  cost?: number; // unit cost — powers margin & inventory valuation
+  stock: number; // quantity on hand
+  lowStockThreshold: number; // warn at or below this
+  trackInventory: boolean; // services (coaching/passes) don't deplete stock
+  status: ProductStatus;
+  imageUrl?: string; // optional photo; UI falls back to a category tile
+  emoji?: string; // display flair on the product tile
+  sport?: Sport; // optional link for sport-specific equipment
+}
+
+/** What a single order line represents — retail or a club service. */
+export type PosLineItemKind =
+  | "product"
+  | "booking"
+  | "membership"
+  | "event"
+  | "coaching"
+  | "guest_pass";
+
+/** Tender types. `split` is a UI mode; persisted payments are the concrete ones. */
+export type PaymentMethodKind = "cash" | "card" | "club_credit";
+
+export interface PosLineItem {
+  id: ID; // line id (cart-local, persisted on the order)
+  kind: PosLineItemKind;
+  refId?: ID; // productId / courtId / planId / eventId / coachId
+  name: string;
+  category?: ProductCategory;
+  sku?: string;
+  emoji?: string;
+  imageUrl?: string;
+  unitPrice: number; // pre-tax
+  quantity: number;
+  taxRate: number; // per-line so mixed tax rates coexist on one invoice
+  discount: number; // absolute CAD off this line (post-quantity)
+  note?: string;
+}
+
+export interface PosPayment {
+  method: PaymentMethodKind;
+  amount: number; // CAD applied via this tender
+  reference?: string; // "Visa •4242", "Cash", "Club credit"
+  tendered?: number; // cash given (for change calc)
+}
+
+export type PosOrderStatus = "completed" | "refunded" | "void";
+
+export interface PosOrder {
+  id: ID;
+  orgId: ID;
+  number: string; // human receipt no. — "POS-1042"
+  cashierId: ID; // staff who rang the sale
+  cashierName: string;
+  customerId?: ID; // member, when attached
+  customerName?: string; // member or walk-in label
+  lineItems: PosLineItem[];
+  subtotal: number; // Σ(unitPrice·qty) before discounts
+  discountTotal: number; // Σ line discounts
+  tax: number; // Σ per-line tax on discounted amounts
+  total: number; // subtotal − discountTotal + tax
+  payments: PosPayment[]; // ≥1; multiple = split payment
+  status: PosOrderStatus;
+  createdAt: string; // ISO
+  note?: string; // order-level note
+}
+
+export type StockAdjustmentReason =
+  | "restock"
+  | "sale"
+  | "correction"
+  | "damage"
+  | "return";
+
+export interface StockAdjustment {
+  id: ID;
+  productId: ID;
+  delta: number; // signed change to stock
+  reason: StockAdjustmentReason;
+  note?: string;
+  by: string; // staff name
+  createdAt: string;
 }
