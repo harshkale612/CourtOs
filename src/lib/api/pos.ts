@@ -1,5 +1,9 @@
 import { format } from "date-fns";
 import type {
+  FulfillmentStatus,
+  OrderChannel,
+  OrderFulfillment,
+  PickupMethod,
   PosLineItem,
   PosOrder,
   PosPayment,
@@ -11,6 +15,7 @@ import type {
 import { db } from "@/lib/mock/data";
 import { ANCHOR_DATE, addDays } from "@/lib/mock/prng";
 import { PRODUCT_CATEGORIES } from "@/lib/constants/pos";
+import { ORDER_CHANNELS, PICKUP_METHODS } from "@/lib/constants/commerce";
 import {
   computeTotals,
   derivedProductStatus,
@@ -74,6 +79,30 @@ export interface InventoryValue {
   byCategory: { category: ProductCategory; label: string; color: string; value: number }[];
 }
 
+/** Cross-channel commerce snapshot for the admin dashboard. */
+export interface CommerceSummary {
+  onlineOrders: number; // count, period
+  posOrders: number; // count, period
+  onlineRevenue: number; // gross, period
+  posRevenue: number; // gross, period
+  totalCommerceRevenue: number; // online + POS, gross
+  retailRevenue: number; // product lines only, pre-tax
+  serviceRevenue: number; // non-retail lines, pre-tax
+  courtRevenue: number; // reservations, period
+  avgBasketSize: number; // gross per order, both channels
+  itemsPerOrder: number; // avg units per order
+  ordersToday: number;
+  awaitingPickup: number; // online orders not yet collected
+}
+
+/** One day of revenue split by channel — powers the dashboard trend. */
+export interface ChannelPoint {
+  label: string;
+  online: number;
+  pos: number;
+  total: number;
+}
+
 export interface CreateOrderInput {
   lineItems: PosLineItem[];
   payments: PosPayment[];
@@ -82,6 +111,23 @@ export interface CreateOrderInput {
   customerId?: string;
   customerName?: string;
   note?: string;
+}
+
+/** Pickup request attached to an order at checkout. */
+export interface PickupRequest {
+  method: PickupMethod;
+  /** Booking this pickup rides along with (`after_booking`). */
+  reservationId?: string;
+  /** When the order becomes collectable — defaults to now + the method's prep time. */
+  readyAt?: string;
+  note?: string;
+}
+
+/** The one input shape both channels place orders with. */
+export interface PlaceOrderInput extends CreateOrderInput {
+  channel: OrderChannel;
+  pickup?: PickupRequest;
+  reservationId?: string;
 }
 
 /* ------------------------------- helpers --------------------------------- */
@@ -106,8 +152,134 @@ function syncStatus(p: Product) {
 }
 
 let runtimeOrders = 0;
+let runtimeShopOrders = 0;
 let runtimeAdj = 0;
 let runtimeProduct = 0;
+
+/* --------------------------- order placement core ------------------------- */
+/**
+ * The single write path for a completed sale — used by the register (`pos`)
+ * and by member self-checkout (`online`). Validates tender & stock, deducts
+ * inventory, records the order, and folds a Transaction into the shared ledger.
+ * Throws ApiError; callers wrap the result in `ok()` for simulated latency.
+ */
+export function placeCommerceOrder(input: PlaceOrderInput): PosOrder {
+  if (!input.lineItems.length) throw new ApiError(400, "Cart is empty.");
+
+  const totals = computeTotals(input.lineItems);
+  const tendered = paymentsTotal(input.payments);
+  if (tendered + 0.01 < totals.total) {
+    throw new ApiError(402, "Payment doesn't cover the order total.");
+  }
+
+  // Club credit must be attached to a member and can't exceed their balance.
+  const creditPay = input.payments.filter((p) => p.method === "club_credit");
+  const creditAmount = round2(creditPay.reduce((s, p) => s + p.amount, 0));
+  if (creditAmount > 0) {
+    if (!input.customerId) throw new ApiError(409, "Attach a member to pay with club credit.");
+    const balance = db.clubCredit[input.customerId] ?? 0;
+    if (creditAmount > balance + 0.01) throw new ApiError(409, "Insufficient club credit.");
+  }
+
+  // Validate stock for tracked products before mutating anything.
+  for (const line of input.lineItems) {
+    if (line.kind !== "product" || !line.refId) continue;
+    const p = db.products.find((x) => x.id === line.refId);
+    if (p?.trackInventory && p.stock < line.quantity) {
+      throw new ApiError(409, `Not enough stock for ${p.name} (${p.stock} left).`);
+    }
+  }
+
+  const online = input.channel === "online";
+  const soldVia = online ? "Online shop" : "Sold on POS";
+
+  // Commit: deduct stock, log sale adjustments.
+  for (const line of input.lineItems) {
+    if (line.kind !== "product" || !line.refId) continue;
+    const p = db.products.find((x) => x.id === line.refId);
+    if (!p || !p.trackInventory) continue;
+    p.stock -= line.quantity;
+    syncStatus(p);
+    db.stockAdjustments.unshift({
+      id: `adj_new_${++runtimeAdj}`,
+      productId: p.id,
+      delta: -line.quantity,
+      reason: "sale",
+      note: soldVia,
+      by: input.cashierName,
+      createdAt: ANCHOR_DATE.toISOString(),
+    });
+  }
+
+  if (creditAmount > 0 && input.customerId) {
+    db.clubCredit[input.customerId] = round2(
+      (db.clubCredit[input.customerId] ?? 0) - creditAmount,
+    );
+  }
+
+  const createdAt = ANCHOR_DATE.toISOString();
+  const hasGoods = input.lineItems.some((l) => l.kind === "product");
+  const id = online ? `shp_new_${++runtimeShopOrders}` : `pos_new_${++runtimeOrders}`;
+  const number = online ? `SHP-${7000 + runtimeShopOrders}` : `POS-${5000 + runtimeOrders}`;
+
+  let fulfillment: OrderFulfillment | undefined;
+  if (input.pickup && hasGoods) {
+    const cfg = PICKUP_METHODS[input.pickup.method];
+    fulfillment = {
+      method: input.pickup.method,
+      status: "preparing",
+      location: cfg.location,
+      reservationId: input.pickup.reservationId ?? input.reservationId,
+      readyAt:
+        input.pickup.readyAt ??
+        new Date(+ANCHOR_DATE + cfg.prepMinutes * 60_000).toISOString(),
+      note: input.pickup.note,
+    };
+  } else if (hasGoods && !online) {
+    // Desk sale — the customer walks away with it.
+    fulfillment = {
+      method: "reception",
+      status: "picked_up",
+      location: "Front desk · handed over at the register",
+      pickedUpAt: createdAt,
+    };
+  }
+
+  const order: PosOrder = {
+    id,
+    orgId: db.org.id,
+    number,
+    channel: input.channel,
+    cashierId: input.cashierId,
+    cashierName: input.cashierName,
+    customerId: input.customerId,
+    customerName: input.customerName ?? (online ? undefined : "Walk-in"),
+    fulfillment,
+    reservationId: input.reservationId,
+    lineItems: input.lineItems,
+    subtotal: totals.subtotal,
+    discountTotal: totals.discountTotal,
+    tax: totals.tax,
+    total: totals.total,
+    payments: input.payments,
+    status: "completed",
+    createdAt,
+    note: input.note,
+  };
+  db.posOrders.unshift(order);
+  db.transactions.unshift({
+    id: `txn_${order.id}`,
+    orgId: db.org.id,
+    userId: input.customerId ?? db.currentUser.id,
+    amount: order.total,
+    type: online ? "shop" : "pos",
+    status: "paid",
+    method:
+      order.payments.length > 1 ? "Split payment" : (order.payments[0]?.reference ?? "Card"),
+    createdAt: order.createdAt,
+  });
+  return order;
+}
 
 export const posApi = {
   /* --------------------------------- catalog ----------------------------- */
@@ -183,14 +355,51 @@ export const posApi = {
     ),
 
   /* --------------------------------- orders ------------------------------ */
-  orders: (opts?: { limit?: number; dateISO?: string }): Promise<PosOrder[]> => {
+  orders: (opts?: {
+    limit?: number;
+    dateISO?: string;
+    channel?: OrderChannel;
+    /** Pickup state — only online orders carry an open one. */
+    fulfillment?: FulfillmentStatus;
+    customerId?: string;
+    query?: string;
+  }): Promise<PosOrder[]> => {
     let rows = db.posOrders;
     if (opts?.dateISO) {
       const day = new Date(opts.dateISO).toDateString();
       rows = rows.filter((o) => new Date(o.createdAt).toDateString() === day);
     }
+    if (opts?.channel) rows = rows.filter((o) => o.channel === opts.channel);
+    if (opts?.fulfillment) rows = rows.filter((o) => o.fulfillment?.status === opts.fulfillment);
+    if (opts?.customerId) rows = rows.filter((o) => o.customerId === opts.customerId);
+    if (opts?.query) {
+      const q = opts.query.trim().toLowerCase();
+      rows = rows.filter(
+        (o) =>
+          o.number.toLowerCase().includes(q) ||
+          (o.customerName ?? "").toLowerCase().includes(q) ||
+          o.lineItems.some((l) => l.name.toLowerCase().includes(q)),
+      );
+    }
     const sorted = [...rows].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
     return ok(opts?.limit ? sorted.slice(0, opts.limit) : sorted);
+  },
+
+  /** Advance (or cancel) a pickup — the desk marks orders ready & collected. */
+  updateFulfillment: (input: {
+    orderId: string;
+    status: FulfillmentStatus;
+  }): Promise<PosOrder> => {
+    const o = db.posOrders.find((x) => x.id === input.orderId);
+    if (!o) return notFound("Order");
+    if (!o.fulfillment) throw new ApiError(409, "This order has nothing to pick up.");
+    o.fulfillment = {
+      ...o.fulfillment,
+      status: input.status,
+      pickedUpAt:
+        input.status === "picked_up" ? ANCHOR_DATE.toISOString() : o.fulfillment.pickedUpAt,
+    };
+    return ok({ ...o }, 320);
   },
 
   order: (id: string): Promise<PosOrder> => {
@@ -201,88 +410,9 @@ export const posApi = {
   creditBalance: (userId?: string): Promise<number> =>
     ok(userId ? db.clubCredit[userId] ?? 0 : 0),
 
-  /** Checkout — the core POS mutation. Deducts stock, records the sale, and
-   *  folds a Transaction into the shared ledger. */
-  createOrder: (input: CreateOrderInput): Promise<PosOrder> => {
-    if (!input.lineItems.length) throw new ApiError(400, "Cart is empty.");
-
-    const totals = computeTotals(input.lineItems);
-    const tendered = paymentsTotal(input.payments);
-    if (tendered + 0.01 < totals.total) {
-      throw new ApiError(402, "Payment doesn't cover the order total.");
-    }
-
-    // Club credit must be attached to a member and can't exceed their balance.
-    const creditPay = input.payments.filter((p) => p.method === "club_credit");
-    const creditAmount = round2(creditPay.reduce((s, p) => s + p.amount, 0));
-    if (creditAmount > 0) {
-      if (!input.customerId) throw new ApiError(409, "Attach a member to pay with club credit.");
-      const balance = db.clubCredit[input.customerId] ?? 0;
-      if (creditAmount > balance + 0.01) throw new ApiError(409, "Insufficient club credit.");
-    }
-
-    // Validate stock for tracked products before mutating anything.
-    for (const line of input.lineItems) {
-      if (line.kind !== "product" || !line.refId) continue;
-      const p = db.products.find((x) => x.id === line.refId);
-      if (p?.trackInventory && p.stock < line.quantity) {
-        throw new ApiError(409, `Not enough stock for ${p.name} (${p.stock} left).`);
-      }
-    }
-
-    // Commit: deduct stock, log sale adjustments.
-    for (const line of input.lineItems) {
-      if (line.kind !== "product" || !line.refId) continue;
-      const p = db.products.find((x) => x.id === line.refId);
-      if (!p || !p.trackInventory) continue;
-      p.stock -= line.quantity;
-      syncStatus(p);
-      db.stockAdjustments.unshift({
-        id: `adj_new_${++runtimeAdj}`,
-        productId: p.id,
-        delta: -line.quantity,
-        reason: "sale",
-        note: `Sold on POS`,
-        by: input.cashierName,
-        createdAt: ANCHOR_DATE.toISOString(),
-      });
-    }
-
-    if (creditAmount > 0 && input.customerId) {
-      db.clubCredit[input.customerId] = round2((db.clubCredit[input.customerId] ?? 0) - creditAmount);
-    }
-
-    const order: PosOrder = {
-      id: `pos_new_${++runtimeOrders}`,
-      orgId: db.org.id,
-      number: `POS-${5000 + runtimeOrders}`,
-      cashierId: input.cashierId,
-      cashierName: input.cashierName,
-      customerId: input.customerId,
-      customerName: input.customerName ?? "Walk-in",
-      lineItems: input.lineItems,
-      subtotal: totals.subtotal,
-      discountTotal: totals.discountTotal,
-      tax: totals.tax,
-      total: totals.total,
-      payments: input.payments,
-      status: "completed",
-      createdAt: ANCHOR_DATE.toISOString(),
-      note: input.note,
-    };
-    db.posOrders.unshift(order);
-    db.transactions.unshift({
-      id: `txn_${order.id}`,
-      orgId: db.org.id,
-      userId: input.customerId ?? db.currentUser.id,
-      amount: order.total,
-      type: "pos",
-      status: "paid",
-      method: order.payments.length > 1 ? "Split payment" : (order.payments[0]?.reference ?? "Card"),
-      createdAt: order.createdAt,
-    });
-    return ok(order, 480);
-  },
+  /** Register checkout — a staff sale on the `pos` channel. */
+  createOrder: (input: CreateOrderInput): Promise<PosOrder> =>
+    ok(placeCommerceOrder({ ...input, channel: "pos" }), 480),
 
   /* --------------------------------- reports ----------------------------- */
   salesSummary: (): Promise<SalesSummary> => {
@@ -393,6 +523,97 @@ export const posApi = {
       agg.set(cat, cur);
     }
     return ok([...agg.values()].sort((a, b) => b.revenue - a.revenue));
+  },
+
+  /* ------------------------- cross-channel commerce ---------------------- */
+  /** Online + POS + court revenue in one snapshot (admin dashboard). */
+  commerceSummary: (): Promise<CommerceSummary> => {
+    const period = completedOrders().filter((o) => inWindow(o.createdAt, periodStart));
+    const online = period.filter((o) => o.channel === "online");
+    const pos = period.filter((o) => o.channel === "pos");
+
+    const gross = (rows: PosOrder[]) => round2(rows.reduce((s, o) => s + o.total, 0));
+    const net = (lines: PosLineItem[]) =>
+      round2(lines.reduce((s, l) => s + (l.unitPrice * l.quantity - l.discount), 0));
+
+    const onlineRevenue = gross(online);
+    const posRevenue = gross(pos);
+    const units = period.reduce(
+      (s, o) => s + o.lineItems.reduce((q, l) => q + l.quantity, 0),
+      0,
+    );
+
+    const courtRevenue = round2(
+      db.reservations
+        .filter((r) => r.status !== "cancelled" && inWindow(r.start, periodStart))
+        .reduce((s, r) => s + r.price, 0),
+    );
+
+    return ok({
+      onlineOrders: online.length,
+      posOrders: pos.length,
+      onlineRevenue,
+      posRevenue,
+      totalCommerceRevenue: round2(onlineRevenue + posRevenue),
+      retailRevenue: net(productLines(period)),
+      serviceRevenue: net(period.flatMap((o) => o.lineItems.filter((l) => l.kind !== "product"))),
+      courtRevenue,
+      avgBasketSize: period.length ? round2((onlineRevenue + posRevenue) / period.length) : 0,
+      itemsPerOrder: period.length ? Math.round((units / period.length) * 10) / 10 : 0,
+      ordersToday: period.filter((o) => onAnchorDay(o.createdAt)).length,
+      awaitingPickup: db.posOrders.filter(
+        (o) =>
+          o.channel === "online" &&
+          o.status === "completed" &&
+          (o.fulfillment?.status === "preparing" || o.fulfillment?.status === "ready"),
+      ).length,
+    });
+  },
+
+  /** Commerce KPI tiles — superset of `posKpis`, spanning both channels. */
+  commerceKpis: (): Promise<PosKpi[]> => {
+    const period = completedOrders().filter((o) => inWindow(o.createdAt, periodStart));
+    const online = period.filter((o) => o.channel === "online");
+    const pos = period.filter((o) => o.channel === "pos");
+    const gross = (rows: PosOrder[]) => round2(rows.reduce((s, o) => s + o.total, 0));
+    const onlineRevenue = gross(online);
+    const posRevenue = gross(pos);
+    const retailRevenue = round2(
+      productLines(period).reduce((s, l) => s + (l.unitPrice * l.quantity - l.discount), 0),
+    );
+    const courtRevenue = round2(
+      db.reservations
+        .filter((r) => r.status !== "cancelled" && inWindow(r.start, periodStart))
+        .reduce((s, r) => s + r.price, 0),
+    );
+    const total = round2(onlineRevenue + posRevenue);
+    const avgBasket = period.length ? round2(total / period.length) : 0;
+
+    return ok([
+      { key: "onlineOrders", label: "Online shop orders", value: online.length, format: "number", delta: 18.4, accent: ORDER_CHANNELS.online.color, icon: "shopping-bag" },
+      { key: "posOrders", label: "POS orders", value: pos.length, format: "number", delta: 5.2, accent: ORDER_CHANNELS.pos.color, icon: "store" },
+      { key: "commerceRevenue", label: "Total commerce revenue", value: total, format: "currency", delta: 12.9, accent: "var(--accent-emerald)", icon: "banknote" },
+      { key: "retailRevenue", label: "Retail revenue (30d)", value: retailRevenue, format: "currency", delta: 11.3, accent: "var(--accent-blue)", icon: "shopping-cart" },
+      { key: "courtRevenue", label: "Court revenue (30d)", value: courtRevenue, format: "currency", delta: 8.1, accent: "var(--accent-cyan)", icon: "calendar-check" },
+      { key: "avgBasketSize", label: "Average basket size", value: avgBasket, format: "currency", delta: 4.6, accent: "var(--accent-purple)", icon: "shopping-basket" },
+    ]);
+  },
+
+  /** Daily revenue split by channel (oldest → newest). */
+  channelSeries: (days = 14): Promise<ChannelPoint[]> => {
+    const completed = completedOrders();
+    const out: ChannelPoint[] = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const date = addDays(ANCHOR_DATE, -i);
+      const key = date.toDateString();
+      const rows = completed.filter((o) => new Date(o.createdAt).toDateString() === key);
+      const online = round2(
+        rows.filter((o) => o.channel === "online").reduce((s, o) => s + o.total, 0),
+      );
+      const pos = round2(rows.filter((o) => o.channel === "pos").reduce((s, o) => s + o.total, 0));
+      out.push({ label: format(date, "MMM d"), online, pos, total: round2(online + pos) });
+    }
+    return ok(out);
   },
 
   inventoryValue: (): Promise<InventoryValue> => {

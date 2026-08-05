@@ -2,9 +2,10 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import type { Product, StockAdjustmentReason } from "@/types";
+import type { FulfillmentStatus, OrderChannel, Product, StockAdjustmentReason } from "@/types";
 import { api, type CreateOrderInput } from "@/lib/api";
 import { queryKeys } from "@/lib/query/keys";
+import { FULFILLMENT_STATUS } from "@/lib/constants/commerce";
 
 /* --------------------------------- reads --------------------------------- */
 export function useProducts() {
@@ -23,9 +24,16 @@ export function useLowStock() {
   return useQuery({ queryKey: queryKeys.pos.lowStock, queryFn: () => api.pos.lowStock() });
 }
 
-export function usePosOrders(opts?: { limit?: number; dateISO?: string }) {
+export function usePosOrders(opts?: {
+  limit?: number;
+  dateISO?: string;
+  channel?: OrderChannel;
+  fulfillment?: FulfillmentStatus;
+  customerId?: string;
+  query?: string;
+}) {
   return useQuery({
-    queryKey: queryKeys.pos.orders(opts?.dateISO, opts?.limit),
+    queryKey: queryKeys.pos.orders(opts),
     queryFn: () => api.pos.orders(opts),
   });
 }
@@ -90,6 +98,28 @@ export function useInventoryValue() {
   });
 }
 
+/* ------------------------- cross-channel commerce ------------------------- */
+export function useCommerceSummary() {
+  return useQuery({
+    queryKey: queryKeys.pos.commerceSummary,
+    queryFn: () => api.pos.commerceSummary(),
+  });
+}
+
+export function useCommerceKpis() {
+  return useQuery({
+    queryKey: queryKeys.pos.commerceKpis,
+    queryFn: () => api.pos.commerceKpis(),
+  });
+}
+
+export function useChannelSeries(days = 14) {
+  return useQuery({
+    queryKey: queryKeys.pos.channelSeries(days),
+    queryFn: () => api.pos.channelSeries(days),
+  });
+}
+
 /* ------------------------------- mutations ------------------------------- */
 function invalidatePos(qc: ReturnType<typeof useQueryClient>) {
   qc.invalidateQueries({ queryKey: ["pos"] });
@@ -128,6 +158,25 @@ export function useAdjustStock() {
     },
     onError: (err) => {
       const msg = err instanceof Error && err.message ? err.message : "Couldn't adjust stock.";
+      toast.error(msg);
+    },
+  });
+}
+
+/** Advance a pickup from the admin orders console. */
+export function useUpdateFulfillment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { orderId: string; status: FulfillmentStatus }) =>
+      api.pos.updateFulfillment(input),
+    onSuccess: (order) => {
+      const label = FULFILLMENT_STATUS[order.fulfillment?.status ?? "preparing"].label;
+      toast.success(`${order.number} · ${label}`);
+      invalidatePos(qc);
+      qc.invalidateQueries({ queryKey: ["shop"] });
+    },
+    onError: (err) => {
+      const msg = err instanceof Error && err.message ? err.message : "Couldn't update the pickup.";
       toast.error(msg);
     },
   });

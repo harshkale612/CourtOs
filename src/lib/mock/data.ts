@@ -5,12 +5,14 @@ import type {
   CourtSection,
   EventRegistration,
   Facility,
+  FulfillmentStatus,
   Invoice,
   Membership,
   MembershipPlan,
   Notification,
   Organization,
   PaymentMethod,
+  PickupMethod,
   PosLineItem,
   PosOrder,
   PosPayment,
@@ -27,6 +29,7 @@ import type {
 } from "@/types";
 import { SPORT_LIST } from "@/lib/constants/sports";
 import { DEFAULT_TAX_RATE } from "@/lib/constants/pos";
+import { PICKUP_METHODS, SHOP_CATEGORIES } from "@/lib/constants/commerce";
 import { computeTotals, round2 } from "@/lib/utils/pos";
 import { PRODUCT_SPECS } from "./pos-catalog";
 import { addDays, ANCHOR_DATE, atTime, createRng, rngHelpers } from "./prng";
@@ -539,41 +542,70 @@ export const clubCredit = buildClubCredit();
 
 const CARD_REFS = ["Visa •4242", "Mastercard •5318", "Amex •0005", "Interac Debit"];
 
-function buildPosOrders(): { orders: PosOrder[]; txns: Transaction[] } {
+/**
+ * Commerce orders across BOTH channels:
+ *  - `pos`    — rung at the desk by staff, handed over at the counter.
+ *  - `online` — placed by a member in the portal Shop (or as a booking add-on),
+ *               collected at Reception / the Pro Shop / after their session.
+ * Every order folds a Transaction into the shared ledger so Billing, Analytics
+ * and the member's payment history all agree.
+ */
+function buildCommerceOrders(): { orders: PosOrder[]; txns: Transaction[] } {
   const orders: PosOrder[] = [];
   const txns: Transaction[] = [];
-  let n = 0;
+  let n = 0; // POS receipt counter
+  let s = 0; // Shop receipt counter
   let li = 0;
   const sellable = products.filter(
     (p) => p.status !== "archived" && (!p.trackInventory || p.stock > 0),
   );
+  const retail = sellable.filter((p) => SHOP_CATEGORIES.includes(p.category));
   const paidEvents = events.filter((e) => e.price > 0);
 
+  /** Basket of 1–maxLines retail/service products. */
+  const basket = (pool: Product[], maxLines: number, allowDiscount: boolean): PosLineItem[] => {
+    const lines: PosLineItem[] = [];
+    for (let j = 0; j < h.int(1, maxLines); j++) {
+      const p = h.pick(pool);
+      lines.push({
+        id: `li_${++li}`,
+        kind: "product",
+        refId: p.id,
+        name: p.name,
+        category: p.category,
+        sku: p.sku,
+        emoji: p.emoji,
+        unitPrice: p.price,
+        quantity: p.price > 40 ? 1 : h.int(1, 3),
+        taxRate: p.taxRate,
+        discount: allowDiscount && h.chance(0.12) ? h.pick([1, 2, 5]) : 0,
+      });
+    }
+    return lines;
+  };
+
+  const record = (order: PosOrder, refunded: boolean) => {
+    orders.push(order);
+    txns.push({
+      id: `txn_${order.id}`,
+      orgId: org.id,
+      userId: order.customerId ?? currentUser.id,
+      amount: refunded ? -order.total : order.total,
+      type: refunded ? "refund" : order.channel === "online" ? "shop" : "pos",
+      status: refunded ? "refunded" : "paid",
+      method:
+        order.payments.length > 1 ? "Split payment" : (order.payments[0]?.reference ?? "Card"),
+      createdAt: order.createdAt,
+    });
+  };
+
+  /* ------------------------------ POS channel ----------------------------- */
   for (let day = -30; day <= 0; day++) {
     const date = addDays(ANCHOR_DATE, day);
-    const count = day === 0 ? h.int(9, 14) : h.int(1, 4);
+    const count = day === 0 ? h.int(7, 11) : h.int(1, 4);
     for (let k = 0; k < count; k++) {
-      const lineItems: PosLineItem[] = [];
-      const numLines = h.int(1, 4);
-      for (let j = 0; j < numLines; j++) {
-        const p = h.pick(sellable);
-        const qty = p.price > 40 ? 1 : h.int(1, 3);
-        const discount = h.chance(0.12) ? h.pick([1, 2, 5]) : 0;
-        lineItems.push({
-          id: `li_${++li}`,
-          kind: "product",
-          refId: p.id,
-          name: p.name,
-          category: p.category,
-          sku: p.sku,
-          emoji: p.emoji,
-          unitPrice: p.price,
-          quantity: qty,
-          taxRate: p.taxRate,
-          discount,
-        });
-      }
-      // ~22% of orders bundle a club service — the "unified transaction" story.
+      const lineItems = basket(sellable, 4, true);
+      // ~22% of desk sales bundle a club service — the "unified transaction" story.
       if (h.chance(0.22)) {
         const svc = h.pick(["membership", "booking", "event"] as const);
         if (svc === "membership") {
@@ -608,42 +640,187 @@ function buildPosOrders(): { orders: PosOrder[]; txns: Transaction[] } {
       const cashier = h.pick(POS_CASHIERS);
       const createdAt = atTime(date, h.int(7, 21), h.pick([0, 15, 30, 45])).toISOString();
       const refunded = day < -1 && h.chance(0.04);
-      orders.push({
-        id: `pos_${++n}`,
+      const hasGoods = lineItems.some((l) => l.kind === "product");
+      record(
+        {
+          id: `pos_${++n}`,
+          orgId: org.id,
+          number: `POS-${1000 + n}`,
+          channel: "pos",
+          cashierId: cashier.id,
+          cashierName: cashier.name,
+          customerId: member?.id,
+          customerName: member?.name ?? "Walk-in",
+          // Desk sales leave with the customer — recorded as collected at the till.
+          fulfillment: hasGoods
+            ? {
+                method: "reception",
+                status: "picked_up",
+                location: "Front desk · handed over at the register",
+                pickedUpAt: createdAt,
+              }
+            : undefined,
+          lineItems,
+          subtotal: totals.subtotal,
+          discountTotal: totals.discountTotal,
+          tax: totals.tax,
+          total: totals.total,
+          payments,
+          status: refunded ? "refunded" : "completed",
+          createdAt,
+        },
+        refunded,
+      );
+    }
+  }
+
+  /* ----------------------------- Online channel ---------------------------- */
+  /** Reservations a member can attach a courtside pickup to. */
+  const upcomingFor = (userId: string) =>
+    reservations.filter(
+      (r) => r.userId === userId && r.status !== "cancelled" && +new Date(r.start) >= +ANCHOR_DATE,
+    );
+
+  const placeOnline = (
+    member: User,
+    date: Date,
+    hour: number,
+    opts: {
+      method: PickupMethod;
+      status: FulfillmentStatus;
+      reservationId?: string;
+      readyAt?: string;
+      lines?: PosLineItem[];
+      note?: string;
+    },
+  ) => {
+    const lineItems = opts.lines ?? basket(retail, 3, false);
+    const totals = computeTotals(lineItems);
+    const createdAt = atTime(date, hour, h.pick([0, 10, 20, 35, 50])).toISOString();
+    const cfg = PICKUP_METHODS[opts.method];
+    const useCredit = (clubCredit[member.id] ?? 0) >= totals.total && h.chance(0.25);
+    record(
+      {
+        id: `shp_${++s}`,
         orgId: org.id,
-        number: `POS-${1000 + n}`,
-        cashierId: cashier.id,
-        cashierName: cashier.name,
-        customerId: member?.id,
-        customerName: member?.name ?? "Walk-in",
+        number: `SHP-${2000 + s}`,
+        channel: "online",
+        // Online checkout is self-serve: the member is their own cashier.
+        cashierId: member.id,
+        cashierName: `${member.name} · online`,
+        customerId: member.id,
+        customerName: member.name,
+        reservationId: opts.reservationId,
+        fulfillment: {
+          method: opts.method,
+          status: opts.status,
+          location: cfg.location,
+          reservationId: opts.reservationId,
+          readyAt: opts.readyAt,
+          pickedUpAt: opts.status === "picked_up" ? createdAt : undefined,
+          note: opts.note,
+        },
         lineItems,
         subtotal: totals.subtotal,
         discountTotal: totals.discountTotal,
         tax: totals.tax,
         total: totals.total,
-        payments,
-        status: refunded ? "refunded" : "completed",
+        payments: [
+          useCredit
+            ? { method: "club_credit", amount: totals.total, reference: "Club credit" }
+            : { method: "card", amount: totals.total, reference: h.pick(CARD_REFS) },
+        ],
+        status: "completed",
         createdAt,
-      });
-      txns.push({
-        id: `txn_pos_${n}`,
-        orgId: org.id,
-        userId: member?.id ?? currentUser.id,
-        amount: refunded ? -totals.total : totals.total,
-        type: refunded ? "refund" : "pos",
-        status: refunded ? "refunded" : "paid",
-        method: payments.length > 1 ? "Split payment" : (payments[0].reference ?? "Card"),
-        createdAt,
+      },
+      false,
+    );
+  };
+
+  // Club-wide online volume across the last 30 days.
+  for (let day = -30; day <= 0; day++) {
+    const date = addDays(ANCHOR_DATE, day);
+    const count = day === 0 ? h.int(3, 5) : h.int(1, 3);
+    for (let k = 0; k < count; k++) {
+      const member = h.pick(members);
+      const method = h.pick(["reception", "reception", "pro_shop", "after_booking"] as const);
+      const upcoming = method === "after_booking" ? upcomingFor(member.id) : [];
+      const reservation = upcoming.length ? h.pick(upcoming) : undefined;
+      const status: FulfillmentStatus =
+        day < -1
+          ? h.chance(0.04)
+            ? "cancelled"
+            : "picked_up"
+          : h.pick(["preparing", "ready", "ready", "picked_up"] as const);
+      placeOnline(member, date, h.int(7, 20), {
+        method: reservation ? "after_booking" : method === "after_booking" ? "reception" : method,
+        status,
+        reservationId: reservation?.id,
+        readyAt: reservation ? reservation.end : undefined,
       });
     }
   }
 
+  /* --- Hand-placed orders for the demo member, one per pickup state --- */
+  const demoUpcoming = upcomingFor(currentUser.id);
+  const byName = (name: string) => products.find((p) => p.name === name)!;
+  const line = (p: Product, quantity: number): PosLineItem => ({
+    id: `li_${++li}`,
+    kind: "product",
+    refId: p.id,
+    name: p.name,
+    category: p.category,
+    sku: p.sku,
+    emoji: p.emoji,
+    unitPrice: p.price,
+    quantity,
+    taxRate: p.taxRate,
+    discount: 0,
+  });
+
+  // Being packed right now — Pro Shop.
+  placeOnline(currentUser, ANCHOR_DATE, 8, {
+    method: "pro_shop",
+    status: "preparing",
+    lines: [line(byName("Babolat Boost Racquet"), 1), line(byName("Tourna Overgrip (3-pack)"), 2)],
+    note: "Grip 3 please",
+  });
+  // Waiting at Reception.
+  placeOnline(currentUser, ANCHOR_DATE, 7, {
+    method: "reception",
+    status: "ready",
+    readyAt: atTime(ANCHOR_DATE, 9).toISOString(),
+    lines: [line(byName("Baseline Club Cap"), 1), line(byName("Court Socks (2-pack)"), 1)],
+  });
+  // Courtside with an upcoming session.
+  if (demoUpcoming.length) {
+    const res = demoUpcoming[0];
+    placeOnline(currentUser, addDays(ANCHOR_DATE, -1), 19, {
+      method: "after_booking",
+      status: "preparing",
+      reservationId: res.id,
+      readyAt: res.end,
+      lines: [line(byName("Gatorade Cool Blue"), 2), line(byName("Wilson US Open Balls (3-can)"), 1)],
+    });
+  }
+  // Collected history — gives "Reorder" something worth repeating.
+  placeOnline(currentUser, addDays(ANCHOR_DATE, -6), 17, {
+    method: "reception",
+    status: "picked_up",
+    lines: [line(byName("Smartwater 600 mL"), 2), line(byName("Clif Energy Bar"), 2)],
+  });
+  placeOnline(currentUser, addDays(ANCHOR_DATE, -18), 12, {
+    method: "pro_shop",
+    status: "picked_up",
+    lines: [line(byName("Baseline Performance Tee"), 1), line(byName("Baseline Water Bottle"), 1)],
+  });
+
   orders.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
   return { orders, txns };
 }
-const posBuild = buildPosOrders();
+const posBuild = buildCommerceOrders();
 export const posOrders = posBuild.orders;
-// Fold POS sales into the shared transaction ledger (Billing/Analytics).
+// Fold commerce sales into the shared transaction ledger (Billing/Analytics).
 transactions.push(...posBuild.txns);
 
 function buildStockAdjustments(): StockAdjustment[] {

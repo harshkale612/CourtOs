@@ -58,6 +58,7 @@ export type TransactionType =
   | "membership"
   | "event"
   | "pos"
+  | "shop"
   | "refund"
   | "other";
 
@@ -375,6 +376,38 @@ export type PosLineItemKind =
 /** Tender types. `split` is a UI mode; persisted payments are the concrete ones. */
 export type PaymentMethodKind = "cash" | "card" | "club_credit";
 
+/**
+ * Where an order was rung up.
+ * - `pos`    — staff sold it at the desk (register)
+ * - `online` — a member bought it themselves in the portal Shop, or as a
+ *   booking add-on. Both channels write the same `PosOrder` + `Transaction`.
+ */
+export type OrderChannel = "pos" | "online";
+
+/** How the customer collects a physical order. */
+export type PickupMethod = "reception" | "pro_shop" | "after_booking";
+
+/** Lifecycle of a pickup, shown to members as a progress trail. */
+export type FulfillmentStatus = "preparing" | "ready" | "picked_up" | "cancelled";
+
+/**
+ * Pickup instructions + live status for an order.
+ * Orders rung at the register are handed over immediately (`picked_up`);
+ * online orders start as `preparing` until the pro shop stages them.
+ */
+export interface OrderFulfillment {
+  method: PickupMethod;
+  status: FulfillmentStatus;
+  /** Human location label, e.g. "Reception desk · main lobby". */
+  location: string;
+  /** Set when the pickup is tied to a court booking (`after_booking`). */
+  reservationId?: ID;
+  /** ISO — when the order becomes collectable (booking start, or staged time). */
+  readyAt?: string;
+  pickedUpAt?: string;
+  note?: string;
+}
+
 export interface PosLineItem {
   id: ID; // line id (cart-local, persisted on the order)
   kind: PosLineItemKind;
@@ -400,14 +433,25 @@ export interface PosPayment {
 
 export type PosOrderStatus = "completed" | "refunded" | "void";
 
+/**
+ * A completed commerce order — one shape for both channels.
+ * `channel: "pos"` is a register sale (cashier = staff); `channel: "online"`
+ * is a member self-serve purchase from the Shop or a booking add-on, where the
+ * cashier fields carry the member's own identity.
+ */
 export interface PosOrder {
   id: ID;
   orgId: ID;
-  number: string; // human receipt no. — "POS-1042"
-  cashierId: ID; // staff who rang the sale
+  number: string; // human receipt no. — "POS-1042" / "SHP-2043"
+  channel: OrderChannel;
+  cashierId: ID; // staff who rang the sale (or the member, online)
   cashierName: string;
   customerId?: ID; // member, when attached
   customerName?: string; // member or walk-in label
+  /** Pickup instructions & status. Absent for service-only orders. */
+  fulfillment?: OrderFulfillment;
+  /** Set when this order was paid alongside a court booking. */
+  reservationId?: ID;
   lineItems: PosLineItem[];
   subtotal: number; // Σ(unitPrice·qty) before discounts
   discountTotal: number; // Σ line discounts

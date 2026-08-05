@@ -10,6 +10,7 @@ import { paymentsApi } from "./payments";
 import { plansApi } from "./plans";
 import { posApi } from "./pos";
 import { reservationsApi } from "./reservations";
+import { shopApi } from "./shop";
 
 export const api = {
   auth: authApi,
@@ -23,6 +24,7 @@ export const api = {
   notifications: notificationsApi,
   analytics: analyticsApi,
   pos: posApi,
+  shop: shopApi,
 };
 
 export { ApiError } from "./client";
@@ -45,5 +47,10 @@ export type {
   BestSeller,
   CategoryRevenue,
   InventoryValue,
+  CommerceSummary,
+  ChannelPoint,
   CreateOrderInput,
+  PlaceOrderInput,
+  PickupRequest,
 } from "./pos";
+export type { PlaceShopOrderInput, ReorderResult } from "./shop";

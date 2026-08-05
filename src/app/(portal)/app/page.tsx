@@ -13,6 +13,8 @@ import { useEvents, useEventRegistrations } from "@/features/events/hooks";
 import { useBookingStore } from "@/stores/booking-store";
 import { ReservationCard } from "@/features/reservations/reservation-card";
 import { EventCard } from "@/features/events/event-card";
+import { ShopTeaser } from "@/features/shop/shop-teaser";
+import { PickupCard } from "@/features/shop/pickup-card";
 import { StatCard } from "@/components/ui/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -64,11 +66,18 @@ export default function DashboardPage() {
           <p className="text-sm text-ink-secondary">{greeting()},</p>
           <h1 className="text-3xl font-bold tracking-tight">{user.name.split(" ")[0]} 👋</h1>
         </div>
-        <Button asChild>
-          <Link href="/app/booking">
-            <Icon name="calendar-plus" className="size-4" /> Book a court
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="secondary" asChild>
+            <Link href="/app/shop">
+              <Icon name="store" className="size-4" /> Pro Shop
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href="/app/booking">
+              <Icon name="calendar-plus" className="size-4" /> Book a court
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* stats */}
@@ -122,10 +131,13 @@ export default function DashboardPage() {
               </div>
             </CardContent>
           </Card>
+
+          <ShopTeaser />
         </div>
 
-        {/* right: membership + events */}
+        {/* right: pickups + membership + events */}
         <div className="space-y-6">
+          <PickupCard userId={user.id} />
           <Card variant="featured">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

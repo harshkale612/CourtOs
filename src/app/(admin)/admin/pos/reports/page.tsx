@@ -1,12 +1,15 @@
 "use client";
 
 import { useMemo } from "react";
+import { ORDER_CHANNELS } from "@/lib/constants/commerce";
 import { formatCurrency } from "@/lib/utils/format";
 import { CHART_COLORS } from "@/components/charts/chart-theme";
 import { AdminHeader } from "@/features/admin/admin-header";
 import { PosKpis } from "@/features/pos/pos-kpis";
 import { BestSellersCard } from "@/features/pos/pos-lists";
 import {
+  useChannelSeries,
+  useCommerceSummary,
   useInventoryValue,
   useRevenueByCategory,
   useSalesSeries,
@@ -24,6 +27,8 @@ export default function PosReportsPage() {
   const { data: weekly } = useSalesSeries(7);
   const { data: byCategory } = useRevenueByCategory();
   const { data: inventory } = useInventoryValue();
+  const { data: channels } = useChannelSeries(14);
+  const { data: summary } = useCommerceSummary();
 
   const categoryDonut = (byCategory ?? []).map((c) => ({ name: c.label, value: c.revenue, color: c.color }));
   const totalCategoryRevenue = (byCategory ?? []).reduce((s, c) => s + c.revenue, 0);
@@ -64,6 +69,48 @@ export default function PosReportsPage() {
             />
           ) : (
             <Skeleton className="h-[300px] w-full" />
+          )}
+        </CardContent>
+      </Card>
+
+      {/* channel split */}
+      <Card>
+        <CardHeader className="flex-row items-start justify-between">
+          <div>
+            <CardTitle>Revenue by channel</CardTitle>
+            <CardDescription>Member shop vs. front desk, last 14 days</CardDescription>
+          </div>
+          {summary && (
+            <div className="hidden gap-6 sm:flex">
+              <ChannelStat
+                label={ORDER_CHANNELS.online.label}
+                orders={summary.onlineOrders}
+                revenue={summary.onlineRevenue}
+                color={ORDER_CHANNELS.online.color}
+              />
+              <ChannelStat
+                label={ORDER_CHANNELS.pos.label}
+                orders={summary.posOrders}
+                revenue={summary.posRevenue}
+                color={ORDER_CHANNELS.pos.color}
+              />
+            </div>
+          )}
+        </CardHeader>
+        <CardContent>
+          {channels ? (
+            <AreaChart
+              data={channels}
+              xKey="label"
+              height={280}
+              series={[
+                { key: "online", name: ORDER_CHANNELS.online.label, color: ORDER_CHANNELS.online.color },
+                { key: "pos", name: ORDER_CHANNELS.pos.label, color: ORDER_CHANNELS.pos.color },
+              ]}
+              valueFormatter={(v) => formatCurrency(v)}
+            />
+          ) : (
+            <Skeleton className="h-[280px] w-full" />
           )}
         </CardContent>
       </Card>
@@ -164,6 +211,30 @@ export default function PosReportsPage() {
           </CardContent>
         </Card>
       </div>
+    </div>
+  );
+}
+
+function ChannelStat({
+  label,
+  orders,
+  revenue,
+  color,
+}: {
+  label: string;
+  orders: number;
+  revenue: number;
+  color: string;
+}) {
+  return (
+    <div className="text-right">
+      <p className="tnum text-lg font-bold tracking-tight text-foreground">
+        {formatCurrency(revenue)}
+      </p>
+      <p className="flex items-center justify-end gap-1.5 text-xs text-ink-secondary">
+        <span className="size-2 rounded-full" style={{ background: color }} />
+        {label} · {orders}
+      </p>
     </div>
   );
 }

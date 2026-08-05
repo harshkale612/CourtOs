@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { PaymentMethod } from "@/types";
 import { formatCurrency, formatLongDate } from "@/lib/utils/format";
-import { PAYMENT_STATUS } from "@/lib/constants/statuses";
+import { PAYMENT_STATUS, TRANSACTION_TYPE_LABEL } from "@/lib/constants/statuses";
 import { useSessionUser } from "@/features/auth/use-session-user";
 import {
   usePaymentMethods,
@@ -139,7 +139,7 @@ export default function PaymentsPage() {
               return (
                 <TableRow key={t.id}>
                   <TableCell className="text-foreground">{formatLongDate(t.createdAt)}</TableCell>
-                  <TableCell className="capitalize">{t.type}</TableCell>
+                  <TableCell>{TRANSACTION_TYPE_LABEL[t.type]}</TableCell>
                   <TableCell className="hidden sm:table-cell">{t.method}</TableCell>
                   <TableCell><Badge tone={status.tone}>{status.label}</Badge></TableCell>
                   <TableCell className="tnum text-right font-medium text-foreground">{formatCurrency(t.amount)}</TableCell>

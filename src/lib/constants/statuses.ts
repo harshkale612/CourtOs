@@ -44,6 +44,7 @@ export const TRANSACTION_TYPE_LABEL: Record<TransactionType, string> = {
   membership: "Membership",
   event: "Event",
   pos: "Retail (POS)",
+  shop: "Online shop",
   refund: "Refund",
   other: "Other",
 };

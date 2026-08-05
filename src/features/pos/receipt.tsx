@@ -1,15 +1,19 @@
-import type { PosLineItem, PosPayment } from "@/types";
+import type { OrderChannel, OrderFulfillment, PosLineItem, PosPayment } from "@/types";
 import { db } from "@/lib/mock/data";
 import { ANCHOR_DATE } from "@/lib/mock/prng";
 import { LINE_ITEM_KINDS, POS_PAYMENT_METHODS, TAX_LABEL } from "@/lib/constants/pos";
+import { FULFILLMENT_STATUS, ORDER_CHANNELS, PICKUP_METHODS } from "@/lib/constants/commerce";
 import { formatCurrency, formatLongDate, formatTime } from "@/lib/utils/format";
 import { lineNet, round2 } from "@/lib/utils/pos";
 import { cn } from "@/lib/utils/cn";
 
 export interface ReceiptData {
   number?: string;
+  /** Defaults to a desk sale; online orders name the shop, not a cashier. */
+  channel?: OrderChannel;
   cashierName: string;
   customerName?: string;
+  fulfillment?: OrderFulfillment;
   lineItems: PosLineItem[];
   subtotal: number;
   discountTotal: number;
@@ -58,9 +62,25 @@ export function Receipt({ order, className }: { order: ReceiptData; className?: 
       <div className="space-y-1 text-xs">
         {order.number && <Row label="Receipt" value={order.number} />}
         <Row label="Date" value={`${formatLongDate(createdAt)} · ${formatTime(createdAt)}`} />
-        <Row label="Cashier" value={order.cashierName} />
+        {order.channel === "online" ? (
+          <Row label="Placed" value={ORDER_CHANNELS.online.label} />
+        ) : (
+          <Row label="Cashier" value={order.cashierName} />
+        )}
         <Row label="Customer" value={order.customerName ?? "Walk-in"} />
       </div>
+
+      {/* pickup */}
+      {order.fulfillment && (
+        <>
+          <Divider />
+          <div className="space-y-1 text-xs">
+            <Row label="Pickup" value={PICKUP_METHODS[order.fulfillment.method].label} />
+            <Row label="Where" value={order.fulfillment.location} />
+            <Row label="Status" value={FULFILLMENT_STATUS[order.fulfillment.status].label} />
+          </div>
+        </>
+      )}
 
       <Divider />
 

@@ -1,4 +1,4 @@
-import type { Sport } from "@/types";
+import type { FulfillmentStatus, OrderChannel, Sport } from "@/types";
 
 /** Centralized query keys — the contract for cache invalidation. */
 export const queryKeys = {
@@ -41,9 +41,28 @@ export const queryKeys = {
     products: ["pos", "products"] as const,
     product: (id: string) => ["pos", "product", id] as const,
     lowStock: ["pos", "low-stock"] as const,
-    orders: (dateISO?: string, limit?: number) =>
-      ["pos", "orders", dateISO ?? "all", limit ?? 0] as const,
+    orders: (opts?: {
+      dateISO?: string;
+      limit?: number;
+      channel?: OrderChannel;
+      fulfillment?: FulfillmentStatus;
+      customerId?: string;
+      query?: string;
+    }) =>
+      [
+        "pos",
+        "orders",
+        opts?.dateISO ?? "all",
+        opts?.limit ?? 0,
+        opts?.channel ?? "any",
+        opts?.fulfillment ?? "any",
+        opts?.customerId ?? "any",
+        opts?.query ?? "",
+      ] as const,
     order: (id: string) => ["pos", "order", id] as const,
+    commerceSummary: ["pos", "commerce-summary"] as const,
+    commerceKpis: ["pos", "commerce-kpis"] as const,
+    channelSeries: (days: number) => ["pos", "channel-series", days] as const,
     stockAdjustments: (productId?: string) =>
       ["pos", "stock-adjustments", productId ?? "all"] as const,
     creditBalance: (userId?: string) => ["pos", "credit", userId ?? "none"] as const,
@@ -53,6 +72,14 @@ export const queryKeys = {
     bestSellers: (limit: number) => ["pos", "best-sellers", limit] as const,
     revenueByCategory: ["pos", "revenue-by-category"] as const,
     inventoryValue: ["pos", "inventory-value"] as const,
+  },
+  shop: {
+    products: ["shop", "products"] as const,
+    product: (id: string) => ["shop", "product", id] as const,
+    related: (id: string) => ["shop", "related", id] as const,
+    orders: (userId: string) => ["shop", "orders", userId] as const,
+    order: (userId: string, orderId: string) => ["shop", "order", userId, orderId] as const,
+    pickups: (userId: string) => ["shop", "pickups", userId] as const,
   },
   analytics: {
     kpis: ["analytics", "kpis"] as const,

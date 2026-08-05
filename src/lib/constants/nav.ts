@@ -22,6 +22,13 @@ export const PORTAL_NAV: NavSection[] = [
     ],
   },
   {
+    title: "Shop",
+    items: [
+      { label: "Pro Shop", href: "/app/shop", icon: "store" },
+      { label: "My Orders", href: "/app/shop/orders", icon: "shopping-bag" },
+    ],
+  },
+  {
     title: "Account",
     items: [
       { label: "Membership", href: "/app/membership", icon: "badge-check" },
@@ -42,9 +49,10 @@ export const ADMIN_NAV: NavSection[] = [
     ],
   },
   {
-    title: "Point of Sale",
+    title: "Commerce",
     items: [
       { label: "Register", href: "/admin/pos", icon: "shopping-cart" },
+      { label: "Orders", href: "/admin/pos/orders", icon: "receipt" },
       { label: "Products", href: "/admin/pos/catalog", icon: "package" },
       { label: "Inventory", href: "/admin/pos/inventory", icon: "warehouse" },
       { label: "Sales Reports", href: "/admin/pos/reports", icon: "bar-chart-3" },
@@ -76,8 +84,8 @@ export const ADMIN_NAV: NavSection[] = [
 export const PORTAL_MOBILE_NAV: NavItem[] = [
   { label: "Home", href: "/app", icon: "home" },
   { label: "Book", href: "/app/booking", icon: "calendar-plus" },
+  { label: "Shop", href: "/app/shop", icon: "store" },
   { label: "Bookings", href: "/app/reservations", icon: "calendar-check" },
-  { label: "Events", href: "/app/events", icon: "trophy" },
   { label: "Profile", href: "/app/profile", icon: "user" },
 ];
 
