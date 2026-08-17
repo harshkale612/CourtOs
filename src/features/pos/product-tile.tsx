@@ -33,9 +33,11 @@ export function ProductTile({ product, onAdd }: { product: Product; onAdd: (p: P
           className="aspect-square w-full rounded-xl"
           emojiClassName="text-4xl sm:text-5xl"
         />
+        {/* Hover-reveal is invisible on touch, so the badge stays on for
+            pointer-less devices and only fades in on hover for mice. */}
         {!out && (
-          <span className="absolute bottom-1.5 right-1.5 flex size-7 items-center justify-center rounded-full bg-grad-brand text-white opacity-0 shadow-glow-brand transition-opacity duration-200 group-hover:opacity-100">
-            <Icon name="plus" className="size-4" />
+          <span className="absolute bottom-1.5 right-1.5 flex size-8 items-center justify-center rounded-full bg-grad-brand text-white shadow-glow-brand transition-opacity duration-200 sm:size-7 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100">
+            <Icon name="plus" className="size-4" strokeWidth={2.5} />
           </span>
         )}
         {out ? (

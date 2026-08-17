@@ -68,7 +68,7 @@ export function ShopProductCard({ product, className }: { product: Product; clas
         </div>
       </Link>
 
-      <div className="flex flex-1 flex-col p-4">
+      <div className="flex flex-1 flex-col p-3 sm:p-4">
         <Link href={`/app/shop/${product.id}`} className="focus-visible:outline-none">
           <h3 className="text-balance text-sm font-semibold leading-snug tracking-tight text-foreground transition-colors group-hover:text-brand">
             {product.name}
@@ -78,16 +78,22 @@ export function ShopProductCard({ product, className }: { product: Product; clas
           <p className="mt-1 line-clamp-2 text-xs text-ink-tertiary">{product.description}</p>
         )}
 
+        {/* Narrow cards (2-up on phones) can't fit price + labelled pill, so the
+            button collapses to a round icon-only tap target below `sm`. */}
         <div className="mt-auto flex items-center justify-between gap-2 pt-3">
-          <span className="tnum text-base font-bold tracking-tight text-foreground">
+          <span className="tnum min-w-0 truncate text-sm font-bold tracking-tight text-foreground sm:text-base">
             {formatCurrency(product.price)}
           </span>
           <button
             type="button"
             disabled={out || atStockLimit}
             onClick={() => addProduct(product)}
+            aria-label={
+              inCart > 0 ? `${product.name} — ${inCart} in cart, add another` : `Add ${product.name} to cart`
+            }
             className={cn(
-              "inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-all duration-200",
+              "inline-flex shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-all duration-200",
+              "size-9 sm:h-9 sm:w-auto sm:gap-1.5 sm:px-3",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",
               out || atStockLimit
                 ? "cursor-not-allowed bg-fill-4 text-ink-tertiary"
@@ -96,11 +102,14 @@ export function ShopProductCard({ product, className }: { product: Product; clas
           >
             {inCart > 0 ? (
               <>
-                <Icon name="check" className="size-3.5" strokeWidth={3} /> {inCart} in cart
+                <span className="tnum text-sm sm:hidden">{inCart}</span>
+                <Icon name="check" className="hidden size-3.5 sm:block" strokeWidth={3} />
+                <span className="hidden sm:inline">{inCart} in cart</span>
               </>
             ) : (
               <>
-                <Icon name="plus" className="size-3.5" /> Add
+                <Icon name="plus" className="size-4 sm:size-3.5" />
+                <span className="hidden sm:inline">Add</span>
               </>
             )}
           </button>
