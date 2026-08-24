@@ -56,7 +56,7 @@ export function Hero() {
         {/* CTAs */}
         <motion.div {...fade(0.3)} className="mt-8 flex w-full flex-col items-center justify-center gap-4 sm:w-auto sm:flex-row">
           <Button size="lg" className="w-full rounded-xl px-8 text-base shadow-[0_8px_32px_-6px_rgba(59,130,246,0.5)] hover:shadow-[0_8px_32px_-6px_rgba(59,130,246,0.7)] sm:w-auto sm:h-[52px]" asChild>
-            <Link href="/register">
+            <Link href="/login">
               Start Free
             </Link>
           </Button>
