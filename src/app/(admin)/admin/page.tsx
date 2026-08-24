@@ -64,12 +64,30 @@ export default function AdminDashboardPage() {
     <div className="space-y-6">
       <AdminHeader
         title="Dashboard"
-        subtitle="Baseline Sports Club · today at a glance"
+        subtitle="Baseline Sports Club · operational command center"
         actions={
-          <>
-            <Button variant="secondary" size="sm"><Icon name="calendar" className="size-4" /> This month</Button>
-            <Button size="sm"><Icon name="arrow-right" className="size-4" /> Export</Button>
-          </>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" asChild>
+              <Link href="/app/booking">
+                <Icon name="plus" className="size-4" /> New Reservation
+              </Link>
+            </Button>
+            <Button size="sm" variant="secondary" asChild>
+              <Link href="/admin/members">
+                <Icon name="user-plus" className="size-4" /> Add Member
+              </Link>
+            </Button>
+            <Button size="sm" variant="secondary" asChild>
+              <Link href="/admin/pos">
+                <Icon name="shopping-cart" className="size-4" /> POS Sale
+              </Link>
+            </Button>
+            <Button size="sm" variant="secondary" asChild>
+              <Link href="/admin/events">
+                <Icon name="trophy" className="size-4" /> Create Event
+              </Link>
+            </Button>
+          </div>
         }
       />
 
