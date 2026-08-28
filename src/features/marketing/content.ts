@@ -3,20 +3,28 @@ import type { Sport } from "@/types";
 const img = (id: string, w = 1200) =>
   `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${w}&q=80`;
 
-/** Validated Unsplash assets (IDs confirmed reachable). */
+/** Curated Unsplash assets — each ID checked to match the sport/subject it labels. */
 export const MARKETING_IMAGES = {
   heroAtmosphere: img("1542144582-1ba00456b5e3", 1600),
   sports: {
-    tennis: img("1530915365347-e35b749a0381"),
-    pickleball: img("1611251135345-18c56206b863"),
-    padel: img("1593766827228-8737b4534aa6"),
-    badminton: img("1521587760476-6c12a4b040da"),
-    squash: img("1558365849-6ebd8b0454b2"),
+    // Tennis — player serving on a hard court
+    tennis: img("1758040252389-47b48246fecb"),
+    // Pickleball — paddles and wiffle balls at the net
+    pickleball: img("1693142518820-78d7a05f1546"),
+    // Padel — padel rackets and balls on a blue court
+    padel: img("1658723826297-fe4d1b1e6600"),
+    // Badminton — racket and shuttlecock
+    badminton: img("1722003180803-577efd6d2ecc"),
+    // Squash — rally inside a four-wall court
+    squash: img("1694723844104-a1495e30c7b0"),
   } as Record<Sport, string>,
   blog: [
-    img("1431324155629-1a6deb1dec8d", 900),
+    // Off-peak courts — empty clay court from above
+    img("1620742820748-87c09249a72a", 900),
+    // Booking-flow design — desk / product shot
     img("1499951360447-b19be8fe80f5", 900),
-    img("1517649763962-0c623066013b", 900),
+    // Peak pricing — court in play from above
+    img("1545151414-8a948e1ea54f", 900),
   ],
 };
 
