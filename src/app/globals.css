@@ -478,6 +478,92 @@
 }
 
 /* ============================================================
+   Marketing hero — cinematic scene utilities.
+   Pure CSS/keyframe layers only (no per-frame JS), so they're covered by
+   the global prefers-reduced-motion rule below like everything else here.
+   Scroll-linked motion lives in JS (framer MotionValues) instead, and is
+   handled explicitly in the hero components — see use-hero-scroll.ts.
+   ============================================================ */
+@layer utilities {
+  /* Slow, independent drift for the background glow field. */
+  .hero-drift {
+    animation: hero-drift 18s ease-in-out infinite;
+  }
+
+  /* Court-scale grid, radially masked so it reads as surface, not wallpaper. */
+  .hero-grid {
+    background-image:
+      linear-gradient(var(--chart-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--chart-grid) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(60% 55% at 50% 42%, black, transparent 72%);
+    -webkit-mask-image: radial-gradient(60% 55% at 50% 42%, black, transparent 72%);
+  }
+
+  /* Light trails — a point of light travelling the trajectory path. */
+  .hero-trail {
+    stroke-dasharray: 0.14 1;
+    animation: hero-trail-move 7s linear infinite;
+  }
+  .hero-trail--slow {
+    animation-duration: 11s;
+    animation-direction: reverse;
+  }
+
+  /* Depth particles — six static dots, drifting in place. */
+  .hero-particle {
+    opacity: 0.22;
+    animation: hero-particle-drift 6s ease-in-out infinite;
+  }
+
+  /* Floating product card idle bob. */
+  .hero-float {
+    animation: hero-float 6.5s ease-in-out infinite;
+  }
+}
+
+@keyframes hero-drift {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  33% {
+    transform: translate(1.4%, -1%);
+  }
+  66% {
+    transform: translate(-1%, 1.2%);
+  }
+}
+
+@keyframes hero-trail-move {
+  to {
+    stroke-dashoffset: -1;
+  }
+}
+
+@keyframes hero-particle-drift {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.18;
+  }
+  50% {
+    transform: translateY(-14px);
+    opacity: 0.5;
+  }
+}
+
+@keyframes hero-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* ============================================================
    Print — POS receipt only. The register/checkout stamps
    `.printing-receipt` on <body> so a Print action outputs just
    the receipt (works through the dialog portal via visibility).
