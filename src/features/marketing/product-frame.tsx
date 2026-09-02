@@ -51,7 +51,9 @@ export function ProductFrame({
       {/* Halo — the frame reads as lit, not pasted on */}
       <div className="absolute inset-6 -z-10 rounded-[2rem] bg-grad-brand opacity-20 blur-[80px]" />
 
-      <div className="glow-border relative overflow-hidden rounded-[18px] bg-raised/90 shadow-sh-4 backdrop-blur-xl sm:rounded-[22px]">
+      {/* bg-raised/90 is already near-opaque, so backdrop-blur here bought
+          almost no visible effect for a real compositor cost — dropped. */}
+      <div className="glow-border relative overflow-hidden rounded-[18px] bg-raised/90 shadow-sh-4 sm:rounded-[22px]">
         {/* Browser chrome */}
         <div className="flex h-11 items-center justify-between border-b border-(--border-subtle) bg-fill-1 px-4 sm:h-12 sm:px-5">
           <div className="flex items-center gap-1.5 sm:gap-2">

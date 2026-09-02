@@ -15,7 +15,9 @@ import { HeroFloatingCards } from "./hero-floating-cards";
  * One tall section (`ref`) defines the scroll range; a `sticky` child pins
  * the actual scene to the viewport while `p` sweeps 0 → 1. Every layer below
  * is a pure function of that single spring value — nothing here re-renders
- * on scroll, it all rides framer's rAF-driven MotionValues.
+ * on scroll, it all rides framer's rAF-driven MotionValues. This runs at
+ * every viewport width, phone included — the scroll-driven story is the
+ * point, not a desktop-only bonus.
  *
  * While pinned, the three acts (headline / court+product / floating cards)
  * share one CSS Grid cell — they overlap and cross-fade in place rather than
@@ -26,15 +28,16 @@ import { HeroFloatingCards } from "./hero-floating-cards";
  * of everything.
  *
  * All of the pin/grid/overlap classes below are gated on the `motion-safe:`
- * variant, not just a breakpoint — `useHeroScroll` already turns `p` to
- * `null` for prefers-reduced-motion, but that only stops values from being
+ * variant (not a breakpoint) — `useHeroScroll` already turns `p` to `null`
+ * for prefers-reduced-motion, but that only stops values from being
  * *driven*; each layer's `whileInView` fallback still settles to fully
  * visible and stays there. Without the same `motion-safe:` gate here, a
- * reduced-motion visit on a wide viewport would keep the overlapping-grid
- * structure while every act sat at opacity 1 at once — headline, court and
- * dashboard on top of each other. Gating the structure itself means
- * reduced-motion collapses to the exact same plain flow mobile uses (see the
- * base, un-prefixed classes): one act at a time, in document order.
+ * reduced-motion visit would keep the overlapping-grid structure while every
+ * act sat at opacity 1 at once — headline, court and dashboard on top of
+ * each other. Gating the structure itself means reduced-motion collapses to
+ * a plain flow instead (see the base, un-prefixed classes): one act at a
+ * time, in document order — the only case that still uses the old
+ * mobile-style stacked layout.
  */
 export function Hero() {
   const { ref, p, pointerEnabled } = useHeroScroll();
@@ -58,28 +61,28 @@ export function Hero() {
   }, [mx, my]);
 
   return (
-    <section ref={ref} className="relative md:motion-safe:h-[220vh] lg:motion-safe:h-[260vh]">
+    <section ref={ref} className="relative motion-safe:h-[220vh] lg:motion-safe:h-[260vh]">
       <div
         onPointerMove={onPointerMove}
         onPointerLeave={onPointerLeave}
-        className="sticky top-0 overflow-hidden px-6 py-28 md:motion-safe:h-[100svh] md:motion-safe:px-8 md:motion-safe:py-0"
+        className="sticky top-0 overflow-hidden px-6 py-28 motion-safe:h-[100svh] motion-safe:py-0 md:px-8"
       >
         <HeroBackground p={p} mx={mx} my={my} />
 
-        <div className="relative mx-auto flex w-full max-w-[1240px] flex-col items-center gap-14 md:motion-safe:grid md:motion-safe:h-full md:motion-safe:gap-0">
+        <div className="relative mx-auto flex w-full max-w-[1240px] flex-col items-center gap-14 motion-safe:grid motion-safe:h-full motion-safe:gap-0">
           {/* Act 2 — court becomes schedule, schedule becomes dashboard. */}
-          <div className="relative z-10 w-full md:motion-safe:col-start-1 md:motion-safe:row-start-1 md:motion-safe:flex md:motion-safe:h-full md:motion-safe:w-full md:motion-safe:flex-col md:motion-safe:items-center md:motion-safe:justify-center">
+          <div className="relative z-10 w-full motion-safe:col-start-1 motion-safe:row-start-1 motion-safe:flex motion-safe:h-full motion-safe:w-full motion-safe:flex-col motion-safe:items-center motion-safe:justify-center">
             <HeroCaption p={p} />
-            <div className="relative mt-4 w-full md:motion-safe:mt-6">
+            <div className="relative mt-4 w-full motion-safe:mt-6">
               <HeroCourtScene p={p} mx={mx} my={my} />
-              <div className="mt-8 flex justify-center md:motion-safe:absolute md:motion-safe:inset-0 md:motion-safe:mt-0 md:motion-safe:items-center">
+              <div className="mt-8 flex justify-center motion-safe:absolute motion-safe:inset-0 motion-safe:mt-0 motion-safe:items-center">
                 <HeroProductReveal p={p} mx={mx} my={my} />
               </div>
             </div>
           </div>
 
           {/* Act 1 — the statement. Painted above the court so it stays legible while both are visible. */}
-          <div className="relative z-20 order-first w-full md:motion-safe:order-none md:motion-safe:col-start-1 md:motion-safe:row-start-1 md:motion-safe:flex md:motion-safe:h-full md:motion-safe:w-full md:motion-safe:items-center md:motion-safe:justify-center">
+          <div className="relative z-20 order-first w-full motion-safe:order-none motion-safe:col-start-1 motion-safe:row-start-1 motion-safe:flex motion-safe:h-full motion-safe:w-full motion-safe:items-center motion-safe:justify-center">
             <HeroHeadline p={p} />
           </div>
 
@@ -89,7 +92,7 @@ export function Hero() {
               those non-interactive too) — without pointer-events-none here,
               its own empty box would sit above the headline's CTAs in every
               hit-test and swallow every click in the pinned scene. */}
-          <div className="pointer-events-none relative z-30 order-last w-full md:motion-safe:order-none md:motion-safe:col-start-1 md:motion-safe:row-start-1 md:motion-safe:h-full md:motion-safe:w-full">
+          <div className="pointer-events-none relative z-30 order-last w-full motion-safe:order-none motion-safe:col-start-1 motion-safe:row-start-1 motion-safe:h-full motion-safe:w-full">
             <HeroFloatingCards p={p} mx={mx} my={my} />
           </div>
         </div>

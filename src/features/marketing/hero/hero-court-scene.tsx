@@ -62,7 +62,7 @@ export function HeroCourtScene({
   // brief defocus sells it as an intentional cut instead.
   const sceneOpacity = useTransform(drive, [0, 0.06, 0.58, 0.66], [0.9, 1, 1, 0], { ease: EASE_FN });
   const sceneScale = useTransform(drive, [0.06, 0.44, 0.66], [1.04, 1, 0.96], { ease: EASE_FN });
-  const sceneBlur = useTransform(drive, [0.54, 0.66], [0, 10]);
+  const sceneBlur = useTransform(drive, [0.54, 0.66], [0, 5]);
   const sceneFilter = useTransform(sceneBlur, (v) => `blur(${v}px)`);
   const parallaxX = useTransform(mx, [-1, 1], [-12, 12]);
   const parallaxY = useTransform(my, [-1, 1], [-8, 8]);

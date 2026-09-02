@@ -2,12 +2,21 @@ import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils/cn";
 import type { PreviewCard } from "./preview-data";
 
-/** One CourtOS interface object, lifted out of the product onto glass. */
+/**
+ * One CourtOS interface object, lifted out of the product onto an elevated
+ * card. Solid `bg-surface`, not `.glass` — these sit in front of a
+ * continuously-animating background for most of the scroll, and
+ * `backdrop-filter` forces a re-blur of everything behind it on every frame
+ * that background moves. A handful of these stacked was measurably the
+ * single most expensive thing in the whole hero (~45% of frame cost in the
+ * settled state). A solid, mostly-opaque surface reads just as premium and
+ * costs the compositor nothing.
+ */
 export function ProductCard({ card, className }: { card: PreviewCard; className?: string }) {
   return (
     <div
       className={cn(
-        "glass flex items-center gap-3 rounded-2xl p-3 shadow-sh-4 backdrop-blur-xl",
+        "flex items-center gap-3 rounded-2xl border border-(--border-default) bg-surface/95 p-3 shadow-sh-4",
         className,
       )}
     >

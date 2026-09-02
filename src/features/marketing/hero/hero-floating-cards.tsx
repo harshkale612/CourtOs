@@ -1,16 +1,22 @@
 "use client";
 
 import { motion, useTransform, type MotionValue } from "framer-motion";
+import { cn } from "@/lib/utils/cn";
 import { PREVIEW_CARDS } from "../preview-data";
 import { ProductCard } from "../product-card";
 import { useIdleProgress } from "../use-idle-progress";
 import { EASE_OUT_FN as EASE_FN } from "./ease";
 
-/** Desktop resting places — they frame the dashboard without covering it. */
+/**
+ * Resting places within the pinned scene — they frame the dashboard without
+ * covering it. Percentages, not pixels from the edge, so the same three
+ * positions hold up from a phone's 100svh frame up through desktop's; only
+ * `lg:` nudges them a little further out once there's room to spare.
+ */
 const PLACEMENT = [
-  "md:absolute md:left-[2%] md:top-[28%] md:w-[244px] lg:left-[5%]",
-  "md:absolute md:right-[2%] md:top-[20%] md:w-[244px] lg:right-[4%]",
-  "md:absolute md:right-[7%] md:bottom-[14%] md:w-[244px] lg:right-[9%]",
+  "left-[2%] top-[28%] w-[210px] sm:w-[244px] lg:left-[5%]",
+  "right-[2%] top-[20%] w-[210px] sm:w-[244px] lg:right-[4%]",
+  "right-[5%] bottom-[14%] w-[210px] sm:w-[244px] lg:right-[9%]",
 ] as const;
 
 const FROM_X = [-44, 44, 44];
@@ -20,6 +26,14 @@ const EASE = [0.16, 1, 0.3, 1] as const;
  * Three real interface objects, arriving last. They are decorative in the
  * layout sense only — the content is the live CourtOS domain model, so the
  * frame edges read as more product rather than as marketing garnish.
+ *
+ * `driven` (== the scene is cinematic, see hero.tsx) chooses the whole
+ * layout mode, not just the animation: pinned, the cards are absolutely
+ * positioned within the 100svh frame at every viewport width. Under
+ * prefers-reduced-motion the pin never happens, so the same positioning
+ * would collapse against a zero-height container (an absolutely-positioned
+ * child can't give its parent a height) — the fallback stacks them in plain
+ * flow instead, matching how the rest of the reduced-motion scene stacks.
  */
 export function HeroFloatingCards({
   p,
@@ -30,8 +44,16 @@ export function HeroFloatingCards({
   mx: MotionValue<number>;
   my: MotionValue<number>;
 }) {
+  const driven = p !== null;
   return (
-    <div className="pointer-events-none mx-auto flex w-full max-w-md flex-col gap-3 md:block md:h-full md:max-w-none">
+    <div
+      className={cn(
+        "pointer-events-none",
+        driven
+          ? "relative h-full w-full"
+          : "mx-auto flex w-full max-w-md flex-col gap-3",
+      )}
+    >
       {PREVIEW_CARDS.map((card, i) => (
         <FloatingCard key={card.id} index={i} p={p} mx={mx} my={my} />
       ))}
@@ -63,7 +85,7 @@ function FloatingCard({
 
   return (
     <motion.div
-      className={PLACEMENT[index]}
+      className={cn(driven && "absolute", PLACEMENT[index])}
       initial={driven ? false : { opacity: 0, y: 18 }}
       whileInView={driven ? undefined : { opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}

@@ -30,7 +30,7 @@ export function HeroProductReveal({
   const scale = useTransform(drive, [0.62, 0.92], [0.9, 1], { ease: EASE_FN });
   const rotateX = useTransform(drive, [0.62, 0.92], [16, 2], { ease: EASE_FN });
   const y = useTransform(drive, [0.62, 0.92], [40, 0], { ease: EASE_FN });
-  const blur = useTransform(drive, [0.62, 0.74], [8, 0]);
+  const blur = useTransform(drive, [0.62, 0.74], [4, 0]);
   const filter = useTransform(blur, (v) => `blur(${v}px)`);
   // The deepest interactive layer, so it takes the least parallax (~1%).
   const px = useTransform(mx, [-1, 1], [-8, 8]);
